@@ -2,8 +2,17 @@
 
 import { useState } from "react";
 
+interface GroceryItem {
+    id: number;
+    name: string;
+    amount: number;
+    unit: string;
+    checked: boolean;
+    note?: string;
+}
+
 // Mock data grouped by aisle
-const mockList = {
+const mockList: Record<string, GroceryItem[]> = {
     "Produce": [
         { id: 1, name: "Avocado", amount: 2, unit: "whole", checked: false },
         { id: 2, name: "Spinach", amount: 2, unit: "cups", checked: false },
@@ -20,6 +29,7 @@ const mockList = {
         { id: 7, name: "Sourdough Bread", amount: 1, unit: "loaf", checked: false },
     ]
 };
+
 
 export default function GroceriesPage() {
     const [list, setList] = useState(mockList);

@@ -72,17 +72,17 @@ export default async function DashboardPage() {
                 <section className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-6">
                     <h2 className="text-xl font-bold mb-6">Active Dietary Rules</h2>
                     <div className="flex flex-wrap gap-2">
-                        {userPrefs?.dietary?.map((diet: string) => (
+                        {(userPrefs?.dietary as string[] | null)?.map((diet: string) => (
                             <span key={diet} className="px-4 py-2 bg-orange-100 dark:bg-orange-950/30 text-orange-700 dark:text-orange-400 font-medium rounded-full text-sm">
                                 {diet}
                             </span>
                         ))}
-                        {userPrefs?.allergies?.map((allergy: string) => (
+                        {(userPrefs?.allergies as string[] | null)?.map((allergy: string) => (
                             <span key={allergy} className="px-4 py-2 bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400 font-medium rounded-full text-sm">
                                 {allergy} Free
                             </span>
                         ))}
-                        {(!userPrefs?.dietary?.length && !userPrefs?.allergies?.length) && (
+                        {(!(userPrefs?.dietary as string[] | null)?.length && !(userPrefs?.allergies as string[] | null)?.length) && (
                             <p className="text-zinc-500">No active restrictions.</p>
                         )}
                     </div>
