@@ -2,54 +2,75 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950 p-8 text-center">
-      <div className="max-w-3xl space-y-8">
-        <div className="inline-block px-4 py-1.5 rounded-full bg-orange-100 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 font-bold tracking-wide text-sm mb-4">
-          ✨ The Smart Recipe Assistant
+    <div className="min-h-screen flex flex-col" style={{ background: "var(--background)" }}>
+      {/* Navbar */}
+      <nav className="flex items-center justify-between px-8 py-4 bg-white border-b" style={{ borderColor: "var(--border)" }}>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "var(--brand-green)" }}>
+            <span className="text-white font-black text-sm">R</span>
+          </div>
+          <span className="font-bold text-lg" style={{ color: "var(--foreground)" }}>ReciPeel</span>
         </div>
-        
-        <h1 className="text-5xl md:text-7xl font-black text-zinc-900 dark:text-zinc-50 tracking-tight leading-tight">
-          Your meals, <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-rose-500">perfectly peeled.</span>
+        <div className="flex items-center gap-3">
+          <Link href="/login" className="text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-50"
+            style={{ color: "var(--muted)" }}>
+            Log in
+          </Link>
+          <Link href="/register"
+            className="text-sm font-semibold px-5 py-2 rounded-lg text-white hover:opacity-90"
+            style={{ background: "var(--brand-green)" }}>
+            Get Started
+          </Link>
+        </div>
+      </nav>
+
+      {/* Hero */}
+      <main className="flex-1 flex flex-col items-center justify-center text-center px-4 py-20">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold mb-8"
+          style={{ background: "var(--brand-green-pale)", color: "var(--brand-green-dark)" }}>
+          <span>✨</span> AI-Powered Recipe & Meal Planning
+        </div>
+
+        <h1 className="text-5xl md:text-6xl font-black mb-6 max-w-3xl leading-tight"
+          style={{ color: "var(--foreground)" }}>
+          Smart recipes that{" "}
+          <span style={{ color: "var(--brand-green)" }}>work for you</span>
         </h1>
-        
-        <p className="text-lg md:text-xl text-zinc-500 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-          ReciPeel automatically imports recipes from any social media link, adapts them to your dietary needs with smart substitutions, and plans your week in seconds.
+
+        <p className="text-lg max-w-xl mb-10 leading-relaxed" style={{ color: "var(--muted)" }}>
+          Import recipes from TikTok, Instagram & YouTube. ReciPeel automatically adapts them to your dietary needs, plans your week, and generates your grocery list.
         </p>
 
-        <div className="pt-8 flex gap-4 justify-center">
-          <Link 
-            href="/api/auth/signin"
-            className="px-8 py-4 rounded-xl font-bold bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:scale-105 transition-transform"
-          >
-            Log In
+        <div className="flex gap-4">
+          <Link href="/register"
+            className="px-8 py-3.5 rounded-xl font-bold text-white hover:opacity-90 shadow-lg"
+            style={{ background: "var(--brand-green)" }}>
+            Start for free
           </Link>
-          <Link 
-            href="/onboarding"
-            className="px-8 py-4 rounded-xl font-bold bg-gradient-to-r from-orange-500 to-rose-500 text-white hover:scale-105 shadow-lg shadow-orange-500/25 transition-transform"
-          >
-            Get Started Free
+          <Link href="/login"
+            className="px-8 py-3.5 rounded-xl font-bold border hover:bg-white transition-colors"
+            style={{ borderColor: "var(--border)", color: "var(--foreground)" }}>
+            Sign in
           </Link>
         </div>
+      </main>
 
-        {/* Feature Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-16">
-          <div className="p-6 bg-white dark:bg-zinc-900 rounded-2xl text-left border border-zinc-200 dark:border-zinc-800 shadow-sm">
-            <div className="text-3xl mb-4">📱</div>
-            <h3 className="font-bold text-lg mb-2">Social Import</h3>
-            <p className="text-zinc-500 text-sm">Paste a TikTok or Reels link and we extract the recipe instantly.</p>
-          </div>
-          <div className="p-6 bg-white dark:bg-zinc-900 rounded-2xl text-left border border-zinc-200 dark:border-zinc-800 shadow-sm">
-            <div className="text-3xl mb-4">🔄</div>
-            <h3 className="font-bold text-lg mb-2">Smart Substitutions</h3>
-            <p className="text-zinc-500 text-sm">Automatic ingredient swaps based on your allergies and diets.</p>
-          </div>
-          <div className="p-6 bg-white dark:bg-zinc-900 rounded-2xl text-left border border-zinc-200 dark:border-zinc-800 shadow-sm">
-            <div className="text-3xl mb-4">🛒</div>
-            <h3 className="font-bold text-lg mb-2">Auto Groceries</h3>
-            <p className="text-zinc-500 text-sm">Your meal plan instantly converts into a grouped shopping list.</p>
-          </div>
+      {/* Feature Strip */}
+      <section className="border-t py-16 px-8" style={{ borderColor: "var(--border)", background: "var(--surface)" }}>
+        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+          {[
+            { emoji: "📱", title: "Import from Social Media", desc: "Paste any TikTok, Instagram Reel, or YouTube Shorts link and get a full recipe in seconds." },
+            { emoji: "🔄", title: "Smart Substitutions", desc: "Ingredients automatically swapped based on your dietary restrictions and allergies." },
+            { emoji: "🛒", title: "Auto Grocery List", desc: "Your weekly meal plan instantly becomes an organized shopping list grouped by aisle." },
+          ].map(f => (
+            <div key={f.title} className="p-6 rounded-2xl border" style={{ borderColor: "var(--border)", background: "var(--surface-raised)" }}>
+              <div className="text-3xl mb-4">{f.emoji}</div>
+              <h3 className="font-bold text-lg mb-2" style={{ color: "var(--foreground)" }}>{f.title}</h3>
+              <p className="text-sm leading-relaxed" style={{ color: "var(--muted)" }}>{f.desc}</p>
+            </div>
+          ))}
         </div>
-      </div>
+      </section>
     </div>
   );
 }

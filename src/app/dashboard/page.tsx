@@ -5,93 +5,132 @@ import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 
 export default async function DashboardPage() {
-    const session = await auth.api.getSession({
-        headers: await headers()
-    });
+  const session = await auth.api.getSession({ headers: await headers() });
+  const userPrefs = await db.query.preferences.findFirst({
+    where: eq(preferences.userId, session!.user.id)
+  });
 
-    const userPrefs = await db.query.preferences.findFirst({
-        where: eq(preferences.userId, session!.user.id)
-    });
+  const dietary = (userPrefs?.dietary as string[] | null) ?? [];
+  const allergies = (userPrefs?.allergies as string[] | null) ?? [];
 
-    return (
-        <div className="p-8 max-w-6xl mx-auto space-y-8">
-            <header>
-                <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
-                    Welcome back, {session?.user.name.split(" ")[0]}!
-                </h1>
-                <p className="text-zinc-500 mt-2">Here is your nutrition overview and daily progress.</p>
-            </header>
+  const macros = [
+    { label: "Calories", current: 1450, max: userPrefs?.dailyCalories || 2000, unit: "kcal", color: "var(--brand-green)" },
+    { label: "Protein", current: 95, max: userPrefs?.dailyProtein || 150, unit: "g", color: "#3b82f6" },
+    { label: "Carbs", current: 180, max: userPrefs?.dailyCarbs || 250, unit: "g", color: "#f59e0b" },
+    { label: "Fat", current: 45, max: userPrefs?.dailyFat || 70, unit: "g", color: "#ef4444" },
+  ];
 
-            {/* Macros Summary Cards */}
-            <div className="grid grid-cols-4 gap-6">
-                {[
-                    { label: "Calories", current: 1450, max: userPrefs?.dailyCalories || 2000, unit: "kcal", color: "bg-orange-500" },
-                    { label: "Protein", current: 95, max: userPrefs?.dailyProtein || 150, unit: "g", color: "bg-blue-500" },
-                    { label: "Carbs", current: 180, max: userPrefs?.dailyCarbs || 250, unit: "g", color: "bg-green-500" },
-                    { label: "Fat", current: 45, max: userPrefs?.dailyFat || 70, unit: "g", color: "bg-yellow-500" },
-                ].map(macro => (
-                    <div key={macro.label} className="bg-white dark:bg-zinc-900 p-6 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800">
-                        <div className="flex justify-between items-baseline mb-4">
-                            <h3 className="font-medium text-zinc-600 dark:text-zinc-400">{macro.label}</h3>
-                            <span className="text-xs font-semibold text-zinc-500">{macro.current} / {macro.max}{macro.unit}</span>
-                        </div>
-                        <div className="h-3 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                            <div 
-                                className={`h-full rounded-full ${macro.color}`} 
-                                style={{ width: `${Math.min(100, (macro.current / macro.max) * 100)}%` }}
-                            />
-                        </div>
-                    </div>
-                ))}
+  return (
+    <div className="p-8 max-w-5xl mx-auto space-y-8">
+      {/* Welcome */}
+      <header>
+        <h1 className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>
+          Good morning, {session?.user.name.split(" ")[0]}! 👋
+        </h1>
+        <p className="text-sm mt-1" style={{ color: "var(--muted)" }}>
+          Here&apos;s your nutrition summary for today.
+        </p>
+      </header>
+
+      {/* Macro Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {macros.map(macro => (
+          <div key={macro.label} className="bg-white rounded-2xl border p-5"
+            style={{ borderColor: "var(--border)" }}>
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+                {macro.label}
+              </span>
             </div>
-
-            <div className="grid grid-cols-2 gap-8 mt-8">
-                {/* Upcoming Meals */}
-                <section className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-6">
-                    <h2 className="text-xl font-bold mb-6">Today's Meals</h2>
-                    <div className="space-y-4">
-                        {[
-                            { type: "Breakfast", title: "Avocado Toast with Egg", cals: 350 },
-                            { type: "Lunch", title: "Grilled Chicken Salad", cals: 450 },
-                            { type: "Dinner", title: "Salmon and Quinoa", cals: 650 },
-                        ].map((meal, i) => (
-                            <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800">
-                                <div>
-                                    <p className="text-sm font-semibold text-orange-500">{meal.type}</p>
-                                    <p className="font-medium">{meal.title}</p>
-                                </div>
-                                <div className="text-zinc-500 font-medium">
-                                    {meal.cals} kcal
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </section>
-
-                {/* Dietary Restrictions Active */}
-                <section className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-6">
-                    <h2 className="text-xl font-bold mb-6">Active Dietary Rules</h2>
-                    <div className="flex flex-wrap gap-2">
-                        {(userPrefs?.dietary as string[] | null)?.map((diet: string) => (
-                            <span key={diet} className="px-4 py-2 bg-orange-100 dark:bg-orange-950/30 text-orange-700 dark:text-orange-400 font-medium rounded-full text-sm">
-                                {diet}
-                            </span>
-                        ))}
-                        {(userPrefs?.allergies as string[] | null)?.map((allergy: string) => (
-                            <span key={allergy} className="px-4 py-2 bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400 font-medium rounded-full text-sm">
-                                {allergy} Free
-                            </span>
-                        ))}
-                        {(!(userPrefs?.dietary as string[] | null)?.length && !(userPrefs?.allergies as string[] | null)?.length) && (
-                            <p className="text-zinc-500">No active restrictions.</p>
-                        )}
-                    </div>
-                    
-                    <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 rounded-xl">
-                        <p className="text-sm font-medium">✨ Smart Substitution Engine is active. Any imported recipes will automatically adapt to your rules.</p>
-                    </div>
-                </section>
+            <div className="text-2xl font-black mb-1" style={{ color: macro.color }}>
+              {macro.current}
+              <span className="text-sm font-semibold ml-1" style={{ color: "var(--muted)" }}>{macro.unit}</span>
             </div>
+            <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>
+              of {macro.max} {macro.unit} goal
+            </p>
+            <div className="h-2 w-full rounded-full" style={{ background: "var(--border)" }}>
+              <div className="h-full rounded-full transition-all"
+                style={{
+                  width: `${Math.min(100, (macro.current / macro.max) * 100)}%`,
+                  background: macro.color
+                }} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Today's Meals */}
+        <div className="bg-white rounded-2xl border p-6" style={{ borderColor: "var(--border)" }}>
+          <h2 className="font-bold text-lg mb-4" style={{ color: "var(--foreground)" }}>Today&apos;s Meals</h2>
+          <div className="space-y-3">
+            {[
+              { type: "Breakfast", title: "Avocado Toast with Egg", cals: 350, emoji: "🌅" },
+              { type: "Lunch", title: "Grilled Chicken Salad", cals: 450, emoji: "☀️" },
+              { type: "Dinner", title: "Salmon and Quinoa", cals: 650, emoji: "🌙" },
+            ].map((meal, i) => (
+              <div key={i} className="flex items-center justify-between p-3 rounded-xl"
+                style={{ background: "var(--surface-raised)" }}>
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">{meal.emoji}</span>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--brand-green)" }}>
+                      {meal.type}
+                    </p>
+                    <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>{meal.title}</p>
+                  </div>
+                </div>
+                <span className="text-sm font-semibold" style={{ color: "var(--muted)" }}>
+                  {meal.cals} kcal
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
-    );
+
+        {/* Dietary Profile */}
+        <div className="bg-white rounded-2xl border p-6" style={{ borderColor: "var(--border)" }}>
+          <h2 className="font-bold text-lg mb-4" style={{ color: "var(--foreground)" }}>Your Dietary Profile</h2>
+
+          {dietary.length > 0 && (
+            <div className="mb-4">
+              <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "var(--muted)" }}>Preferences</p>
+              <div className="flex flex-wrap gap-2">
+                {dietary.map(d => (
+                  <span key={d} className="px-3 py-1 rounded-full text-xs font-semibold"
+                    style={{ background: "var(--brand-green-pale)", color: "var(--brand-green-dark)" }}>
+                    {d}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {allergies.length > 0 && (
+            <div className="mb-4">
+              <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "var(--muted)" }}>Allergies</p>
+              <div className="flex flex-wrap gap-2">
+                {allergies.map(a => (
+                  <span key={a} className="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                    {a}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {!dietary.length && !allergies.length && (
+            <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>No preferences set yet.</p>
+          )}
+
+          <div className="p-3 rounded-xl text-sm font-medium flex items-start gap-2"
+            style={{ background: "var(--brand-green-pale)", color: "var(--brand-green-dark)" }}>
+            <span>✨</span>
+            <span>Smart Substitution Engine is active. Imported recipes will auto-adapt to your profile.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

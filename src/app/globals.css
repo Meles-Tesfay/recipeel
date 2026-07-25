@@ -1,21 +1,21 @@
 @import "tailwindcss";
 
-/* === ReciPeel Design System === */
+/* === ReciPeel Design System — Green & Cream Theme === */
 :root {
-  /* Brand Colors */
-  --brand-orange: #f97316;
-  --brand-orange-light: #fed7aa;
-  --brand-rose: #f43f5e;
-  --brand-gradient-start: #f97316;
-  --brand-gradient-end: #f43f5e;
+  /* Brand Colors — Forest Green */
+  --brand-green: #2d6a4f;
+  --brand-green-dark: #1b4332;
+  --brand-green-light: #74c69d;
+  --brand-green-pale: #d8f3dc;
 
-  /* Light Mode Surface */
-  --background: #f8f8f8;
+  /* Surfaces */
+  --background: #f5f0e8;
   --surface: #ffffff;
-  --surface-raised: #f4f4f5;
-  --border: #e4e4e7;
-  --foreground: #09090b;
-  --muted: #71717a;
+  --surface-raised: #faf8f4;
+  --border: #e8e0d0;
+  --foreground: #1a1a1a;
+  --muted: #6b7280;
+  --muted-light: #9ca3af;
 
   /* Font */
   --font-sans: var(--font-inter), 'Inter', system-ui, sans-serif;
@@ -23,12 +23,13 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #09090b;
-    --surface: #18181b;
-    --surface-raised: #27272a;
-    --border: #3f3f46;
-    --foreground: #fafafa;
-    --muted: #a1a1aa;
+    --background: #0f1a14;
+    --surface: #162419;
+    --surface-raised: #1e3024;
+    --border: #2d4a37;
+    --foreground: #f0f9f4;
+    --muted: #8dab97;
+    --muted-light: #6b8f7a;
   }
 }
 
@@ -38,37 +39,24 @@
   --color-surface: var(--surface);
   --color-border: var(--border);
   --color-muted: var(--muted);
-  --color-brand: var(--brand-orange);
+  --color-brand: var(--brand-green);
   --font-sans: var(--font-sans);
 }
 
 /* === Base Styles === */
-*, *::before, *::after {
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 /* === Utility Classes === */
 .brand-gradient {
-  background: linear-gradient(135deg, var(--brand-gradient-start), var(--brand-gradient-end));
-}
-
-.brand-text-gradient {
-  background: linear-gradient(135deg, var(--brand-gradient-start), var(--brand-gradient-end));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  background: linear-gradient(135deg, var(--brand-green), var(--brand-green-dark));
 }
 
 /* Custom Scrollbar */
@@ -77,14 +65,10 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
 
-/* Smooth transitions for interactive elements */
-button, a, input, select, textarea {
-  transition: all 0.15s ease;
-}
+button, a, input, select, textarea { transition: all 0.15s ease; }
 
-/* Focus ring */
 *:focus-visible {
-  outline: 2px solid var(--brand-orange);
+  outline: 2px solid var(--brand-green);
   outline-offset: 2px;
   border-radius: 4px;
 }
