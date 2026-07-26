@@ -219,9 +219,17 @@ export default function PlannerPage() {
                         <p className="text-sm mb-4 text-zinc-500">For {selectedSlot?.day} {selectedSlot?.type}</p>
                         <div className="flex-1 overflow-y-auto space-y-2 pr-2">
                             {library.length === 0 ? (
-                                <p className="text-sm p-4 text-center rounded-xl bg-gray-50 border border-dashed border-zinc-200 text-zinc-400">
-                                    Your library is empty. Go import some recipes!
-                                </p>
+                                <div className="flex flex-col items-center text-center p-6 rounded-xl bg-gray-50 border border-dashed border-zinc-200">
+                                    <div className="text-4xl mb-3">📥</div>
+                                    <p className="text-sm font-bold text-zinc-700 mb-1">Your recipe library is empty</p>
+                                    <p className="text-xs text-zinc-400 mb-4 leading-relaxed">Import recipes from TikTok, Instagram, or YouTube first — then you can assign them to your meal plan.</p>
+                                    <a href="/dashboard/recipes"
+                                        className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-all"
+                                        style={{ background: "var(--brand-green)" }}>
+                                        → Go Import Recipes
+                                    </a>
+                                </div>
+
                             ) : (
                                 library.map(recipe => (
                                     <div key={recipe.id} onClick={() => handleAssign(recipe.id)}
