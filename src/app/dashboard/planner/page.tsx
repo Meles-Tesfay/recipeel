@@ -146,10 +146,10 @@ export default function PlannerPage() {
 
                     {/* Meal rows */}
                     {MEAL_TYPES.map(type => (
-                        <div key={type} className="grid grid-cols-8 mb-3 items-start">
-                            {/* Row Label */}
-                            <div className="flex items-start pt-2 pr-4">
-                                <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">{type}</span>
+                        <div key={type} className="grid grid-cols-8 mb-4 items-center">
+                            {/* Row Label — vertically centered with the card row */}
+                            <div className="flex items-center pr-4">
+                                <span className="text-[11px] font-extrabold uppercase tracking-widest text-zinc-600">{type}</span>
                             </div>
 
                             {DAYS_FULL.map(day => {
@@ -159,7 +159,7 @@ export default function PlannerPage() {
                                     <div
                                         key={`${day}-${type}`}
                                         onClick={() => openModal(day, type)}
-                                        className="mx-1 rounded-xl border cursor-pointer transition-all hover:shadow-md overflow-hidden"
+                                        className="mx-1 rounded-xl border cursor-pointer transition-all hover:shadow-md overflow-hidden min-h-[80px] flex flex-col justify-center"
                                         style={{ borderColor: meal ? "transparent" : "#e4e4e7", background: meal ? "white" : "transparent" }}
                                     >
                                         {meal ? (
@@ -173,8 +173,8 @@ export default function PlannerPage() {
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="flex items-center justify-center h-16 text-zinc-300 hover:text-zinc-400 transition-colors">
-                                                <span className="text-2xl font-light">+</span>
+                                            <div className="flex items-center justify-center flex-1 text-zinc-400 hover:text-zinc-600 transition-colors">
+                                                <span className="text-xl font-bold">+</span>
                                             </div>
                                         )}
                                     </div>
@@ -182,6 +182,26 @@ export default function PlannerPage() {
                             })}
                         </div>
                     ))}
+
+                    {/* Daily totals row */}
+                    <div className="grid grid-cols-8 mt-2">
+                        <div className="pr-4" />
+                        {DAYS_FULL.map(day => {
+                            const dayMeals = Object.values(plannerData[day] || {});
+                            const dayCals = dayMeals.reduce((s: number, m: any) => s + (m?.calories || 0), 0);
+                            return (
+                                <div key={day} className="mx-1 px-2 pt-2">
+                                    {dayCals > 0 && (
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">DAY</span>
+                                            <div className="flex-1 h-0.5 rounded-full" style={{ background: "var(--brand-green)" }} />
+                                            <span className="text-[10px] font-bold text-zinc-600">{dayCals}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
 
