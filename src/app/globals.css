@@ -9,13 +9,13 @@
   --brand-green-pale: #d8f3dc;
 
   /* Surfaces */
-  --background: #f5f0e8;
+  --background: #f4f1ec;
   --surface: #ffffff;
-  --surface-raised: #faf8f4;
-  --border: #e8e0d0;
-  --foreground: #1a1a1a;
-  --muted: #6b7280;
-  --muted-light: #9ca3af;
+  --surface-raised: #f9f7f3;
+  --border: #e8e4dc;
+  --foreground: #18181b;
+  --muted: #71717a;
+  --muted-light: #a1a1aa;
 
   /* Font */
   --font-sans: var(--font-inter), 'Inter', system-ui, sans-serif;

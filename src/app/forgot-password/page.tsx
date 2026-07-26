@@ -17,7 +17,7 @@ export default function ForgotPasswordPage() {
     
     // The forgetPassword plugin handles generating the token and sending the email 
     // via our configured sendResetPassword hook
-    const { error: err } = await authClient.forgetPassword({
+    const { error: err } = await authClient.requestPasswordReset({
       email,
       redirectTo: "/reset-password",
     });

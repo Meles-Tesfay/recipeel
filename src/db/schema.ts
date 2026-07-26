@@ -1,4 +1,5 @@
 import { pgTable, text, timestamp, boolean, uuid, integer, json } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
 // Better Auth Tables
 export const user = pgTable("user", {
@@ -14,6 +15,9 @@ export const user = pgTable("user", {
 export const session = pgTable("session", {
 	id: text("id").primaryKey(),
 	expiresAt: timestamp("expiresAt").notNull(),
+	token: text("token").notNull().unique(),
+	createdAt: timestamp("createdAt").notNull(),
+	updatedAt: timestamp("updatedAt").notNull(),
 	ipAddress: text("ipAddress"),
 	userAgent: text("userAgent"),
 	userId: text("userId").notNull().references(() => user.id)
@@ -27,15 +31,22 @@ export const account = pgTable("account", {
 	accessToken: text("accessToken"),
 	refreshToken: text("refreshToken"),
 	idToken: text("idToken"),
+	accessTokenExpiresAt: timestamp("accessTokenExpiresAt"),
+	refreshTokenExpiresAt: timestamp("refreshTokenExpiresAt"),
+	scope: text("scope"),
 	expiresAt: timestamp("expiresAt"),
-	password: text("password")
+	password: text("password"),
+	createdAt: timestamp("createdAt").notNull(),
+	updatedAt: timestamp("updatedAt").notNull()
 });
 
 export const verification = pgTable("verification", {
 	id: text("id").primaryKey(),
 	identifier: text("identifier").notNull(),
 	value: text("value").notNull(),
-	expiresAt: timestamp("expiresAt").notNull()
+	expiresAt: timestamp("expiresAt").notNull(),
+	createdAt: timestamp("createdAt"),
+	updatedAt: timestamp("updatedAt")
 });
 
 // App Tables
@@ -50,6 +61,9 @@ export const preferences = pgTable("preferences", {
     dailyProtein: integer("dailyProtein"),
     dailyCarbs: integer("dailyCarbs"),
     dailyFat: integer("dailyFat"),
+    cookingPrefs: json("cookingPrefs").default([]),
+    cuisinePrefs: json("cuisinePrefs").default([]),
+    skillLevel: text("skillLevel"),
 });
 
 export const recipes = pgTable("recipes", {
@@ -64,6 +78,9 @@ export const recipes = pgTable("recipes", {
     carbs: integer("carbs"),
     fat: integer("fat"),
     isFavorite: boolean("isFavorite").default(false),
+    tags: json("tags").default([]),
+    notes: text("notes"),
+    folder: text("folder"),
     createdAt: timestamp("createdAt").defaultNow(),
 });
 
@@ -75,6 +92,8 @@ export const ingredients = pgTable("ingredients", {
     unit: text("unit"),
     originalName: text("originalName"),
     substitutedWith: text("substitutedWith"), // Name of substitution ingredient
+    isSubstituted: boolean("isSubstituted").default(false),
+    substituteFor: text("substituteFor"), // Name of the original ingredient this replaces
 });
 
 export const mealPlans = pgTable("meal_plans", {
@@ -102,3 +121,33 @@ export const groceryItems = pgTable("grocery_items", {
     aisle: text("aisle"),
     isChecked: boolean("isChecked").default(false),
 });
+
+export const recipesRelations = relations(recipes, ({ many }) => ({
+    ingredients: many(ingredients),
+    mealPlans: many(mealPlans),
+}));
+
+export const ingredientsRelations = relations(ingredients, ({ one }) => ({
+    recipe: one(recipes, {
+        fields: [ingredients.recipeId],
+        references: [recipes.id],
+    }),
+}));
+
+export const mealPlansRelations = relations(mealPlans, ({ one }) => ({
+    recipe: one(recipes, {
+        fields: [mealPlans.recipeId],
+        references: [recipes.id],
+    }),
+}));
+
+export const groceryListsRelations = relations(groceryLists, ({ many }) => ({
+    items: many(groceryItems),
+}));
+
+export const groceryItemsRelations = relations(groceryItems, ({ one }) => ({
+    list: one(groceryLists, {
+        fields: [groceryItems.listId],
+        references: [groceryLists.id],
+    }),
+}));
