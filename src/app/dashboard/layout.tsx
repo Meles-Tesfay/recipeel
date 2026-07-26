@@ -22,7 +22,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: "var(--background)" }}>
       {/* Sidebar Component */}
-      <Sidebar user={{ name: session.user.name, email: session.user.email }} />
+      <Sidebar user={{ name: session.user.name, email: session.user.email, image: session.user.image }} />
 
       {/* Main Content */}
       <main className="flex-1 overflow-auto">

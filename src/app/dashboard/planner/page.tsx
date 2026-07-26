@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getUserRecipes, getMealPlan, saveMealPlan, generateGroceryList } from "@/lib/actions";
+import { getUserRecipes, getMealPlan, saveMealPlan, generateGroceryList, getUserPreferences } from "@/lib/actions";
 import { useRouter } from "next/navigation";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -22,13 +22,18 @@ export default function PlannerPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedSlot, setSelectedSlot] = useState<{ day: string, type: string } | null>(null);
     const [generating, setGenerating] = useState(false);
+    const [goalCals, setGoalCals] = useState(2000);
 
     useEffect(() => { loadData(); }, []);
 
     const loadData = async () => {
-        const recipes = await getUserRecipes();
+        const [recipes, plans, prefs] = await Promise.all([
+            getUserRecipes(),
+            getMealPlan(new Date(), new Date()),
+            getUserPreferences(),
+        ]);
         setLibrary(recipes);
-        const plans = await getMealPlan(new Date(), new Date());
+        if (prefs?.dailyCalories) setGoalCals(prefs.dailyCalories);
         const dataMap: Record<string, Record<string, any>> = {};
         for (const day of DAYS_FULL) dataMap[day] = {};
         plans.forEach((plan: any) => {
@@ -63,7 +68,6 @@ export default function PlannerPage() {
     const totalProtein = allMeals.reduce((s, m) => s + (m?.protein || 0), 0);
     const totalCarbs = allMeals.reduce((s, m) => s + (m?.carbs || 0), 0);
     const totalFat = allMeals.reduce((s, m) => s + (m?.fat || 0), 0);
-    const goalCals = 2000;
     const calsPct = Math.min((totalCals / goalCals) * 100, 100);
 
     // SVG circle for calorie ring

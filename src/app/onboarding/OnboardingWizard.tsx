@@ -6,6 +6,7 @@ import { saveOnboardingPreferences } from "@/lib/actions";
 const STEPS = [
   { id: "dietary", title: "Dietary Preferences", subtitle: "Select all that apply to you", icon: "🥗" },
   { id: "allergies", title: "Food Allergies", subtitle: "We'll automatically flag these in recipes", icon: "⚠️" },
+  { id: "cooking", title: "Cooking Preferences", subtitle: "How do you like to cook?", icon: "🍳" },
   { id: "goals", title: "Goals & Budget", subtitle: "Help us personalize your experience", icon: "🎯" },
   { id: "macros", title: "Daily Nutrition Goals", subtitle: "We'll track these for you automatically", icon: "📊" },
 ];
@@ -33,12 +34,22 @@ const ALLERGY_OPTIONS = [
   { label: "Fish", emoji: "🐠" },
 ];
 
+const COOKING_OPTIONS = [
+  { label: "Quick & Easy", emoji: "⏱️" },
+  { label: "Meal Prep", emoji: "🍱" },
+  { label: "Slow Cooker", emoji: "🍲" },
+  { label: "Air Fryer", emoji: "💨" },
+  { label: "Baking", emoji: "🥐" },
+  { label: "Grilling", emoji: "🔥" },
+];
+
 export function OnboardingWizard() {
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     dietary: [] as string[],
     allergies: [] as string[],
+    cookingPrefs: [] as string[],
     fitnessGoals: "",
     budget: "",
     dailyCalories: 2000,
@@ -47,11 +58,11 @@ export function OnboardingWizard() {
     dailyFat: 65,
   });
 
-  const toggle = (key: "dietary" | "allergies", value: string) => {
+  const toggle = (key: "dietary" | "allergies" | "cookingPrefs", value: string) => {
     setFormData(prev => ({
       ...prev,
       [key]: prev[key].includes(value)
-        ? prev[key].filter(i => i !== value)
+        ? prev[key].filter((i: string) => i !== value)
         : [...prev[key], value],
     }));
   };
@@ -133,8 +144,26 @@ export function OnboardingWizard() {
             </div>
           )}
 
-          {/* Step 2 — Goals & Budget */}
+          {/* Step 2 — Cooking Preferences */}
           {step === 2 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {COOKING_OPTIONS.map(({ label, emoji }) => (
+                <button key={label} onClick={() => toggle("cookingPrefs", label)}
+                  className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 text-sm font-medium transition-all"
+                  style={{
+                    borderColor: formData.cookingPrefs.includes(label) ? "var(--brand-green)" : "var(--border)",
+                    background: formData.cookingPrefs.includes(label) ? "var(--brand-green-pale)" : "var(--surface-raised)",
+                    color: formData.cookingPrefs.includes(label) ? "var(--brand-green-dark)" : "var(--foreground)",
+                  }}>
+                  <span className="text-2xl">{emoji}</span>
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Step 3 — Goals & Budget */}
+          {step === 3 && (
             <div className="space-y-5">
               <div>
                 <label className="block text-sm font-semibold mb-3" style={{ color: "var(--foreground)" }}>Fitness Goal</label>
@@ -181,8 +210,8 @@ export function OnboardingWizard() {
             </div>
           )}
 
-          {/* Step 3 — Macros */}
-          {step === 3 && (
+          {/* Step 4 — Macros */}
+          {step === 4 && (
             <div className="space-y-5">
               {[
                 { key: "dailyCalories", label: "Daily Calories", unit: "kcal", min: 1000, max: 4000, step: 50 },

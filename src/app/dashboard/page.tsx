@@ -14,6 +14,11 @@ export default async function DashboardPage() {
 
   const dietary = (userPrefs?.dietary as string[] | null) ?? [];
   const allergies = (userPrefs?.allergies as string[] | null) ?? [];
+  const cookingPrefs = (userPrefs?.cookingPrefs as string[] | null) ?? [];
+
+  // Time-appropriate greeting
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   // Get today's day string
   const todayIndex = new Date().getDay();
@@ -62,7 +67,7 @@ export default async function DashboardPage() {
       {/* Welcome */}
       <header>
         <h1 className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>
-          Good morning, {session?.user.name.split(" ")[0]}! 👋
+          {greeting}, {session?.user.name.split(" ")[0]}! 👋
         </h1>
         <p className="text-sm mt-1" style={{ color: "var(--muted)" }}>
           Here&apos;s your nutrition summary for today ({todayString}).
@@ -164,6 +169,20 @@ export default async function DashboardPage() {
 
           {!dietary.length && !allergies.length && (
             <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>No preferences set yet.</p>
+          )}
+
+          {cookingPrefs.length > 0 && (
+            <div className="mb-4">
+              <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "var(--muted)" }}>Cooking Style</p>
+              <div className="flex flex-wrap gap-2">
+                {cookingPrefs.map((c: string) => (
+                  <span key={c} className="px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm"
+                    style={{ background: "#e0f2fe", color: "#0369a1" }}>
+                    {c}
+                  </span>
+                ))}
+              </div>
+            </div>
           )}
 
           <div className="p-4 rounded-xl text-sm font-medium flex items-start gap-3 mt-6 border"

@@ -6,9 +6,20 @@ import { useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 
-function LoginContent() {
+function ResetSuccessMessage() {
   const searchParams = useSearchParams();
   const isResetSuccess = searchParams.get("success") === "password_reset";
+  if (!isResetSuccess) return null;
+  
+  return (
+    <div className="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm flex items-start">
+      <svg className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      <p>Your password has been reset successfully. You can now log in with your new password.</p>
+    </div>
+  );
+}
+
+export default function LoginPage() {
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -58,12 +69,9 @@ function LoginContent() {
         </div>
 
         {/* Success Banner */}
-        {isResetSuccess && (
-          <div className="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm flex items-start">
-            <svg className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            <p>Your password has been reset successfully. You can now log in with your new password.</p>
-          </div>
-        )}
+        <Suspense fallback={null}>
+          <ResetSuccessMessage />
+        </Suspense>
 
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-sm border p-6 space-y-4"
@@ -154,13 +162,4 @@ function LoginContent() {
         </p>
       </div>
     </div>
-  );
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen" style={{ background: "var(--background)" }} />}>
-      <LoginContent />
-    </Suspense>
-  );
 }

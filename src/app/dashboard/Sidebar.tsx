@@ -20,6 +20,9 @@ const navItems = [
     { name: "Safe Eats", href: "/dashboard/safe-eats", icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
     )},
+    { name: "My Profile", href: "/dashboard/profile", icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+    )},
 ];
 
 export default function Sidebar({ user }: { user: { name: string; email: string; image?: string | null } }) {
@@ -71,10 +74,14 @@ export default function Sidebar({ user }: { user: { name: string; email: string;
             {/* User Profile + Sign Out */}
             <div className="p-3 border-t border-zinc-100">
                 <div className="flex items-center gap-3 px-2 py-2 mb-1">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                        style={{ background: "var(--brand-green)" }}>
-                        {initials}
-                    </div>
+                    {user.image ? (
+                        <img src={user.image} alt={user.name} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                    ) : (
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                            style={{ background: "var(--brand-green)" }}>
+                            {initials}
+                        </div>
+                    )}
                     <div className="overflow-hidden flex-1">
                         <p className="font-semibold text-[13px] truncate text-zinc-800">{user.name}</p>
                         <p className="text-[11px] truncate text-zinc-400">{user.email}</p>
