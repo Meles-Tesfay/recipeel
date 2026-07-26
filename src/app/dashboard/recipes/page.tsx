@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { extractRecipeFromUrl, saveRecipe, getUserRecipes, deleteRecipe } from "@/lib/actions";
+import { extractRecipeFromUrl, saveRecipe, getUserRecipes, deleteRecipe, toggleFavorite, updateIngredient } from "@/lib/actions";
 
 const CARD_GRADIENTS = [
     "from-emerald-400 to-teal-500",
@@ -24,7 +24,18 @@ function getGradient(id: string) {
     return CARD_GRADIENTS[h % CARD_GRADIENTS.length];
 }
 
-const FOLDERS = ["All", "Breakfast", "Quick Prep", "High-Protein", "Dinner"];
+function getSuggestionForIngredient(name: string) {
+    const lower = name.toLowerCase();
+    if (lower.includes("cream")) return "Coconut Milk";
+    if (lower.includes("parmesan")) return "Nutritional Yeast";
+    if (lower.includes("peanut")) return "Sunflower Seed Butter";
+    if (lower.includes("wheat") || (lower.includes("noodles") && !lower.includes("rice"))) return "Rice Noodles";
+    if (lower.includes("chicken")) return "Tofu";
+    if (lower.includes("soy sauce")) return "Coconut Aminos";
+    return null;
+}
+
+const FOLDERS = ["All", "Favorites", "Breakfast", "Quick Prep", "High-Protein", "Dinner"];
 
 export default function RecipesPage() {
     const [importUrl, setImportUrl] = useState("");
@@ -34,6 +45,7 @@ export default function RecipesPage() {
     const [library, setLibrary] = useState<any[]>([]);
     const [activeFolder, setActiveFolder] = useState("All");
     const [searchQuery, setSearchQuery] = useState("");
+    const [selectedRecipe, setSelectedRecipe] = useState<any>(null);
 
     useEffect(() => { loadLibrary(); }, []);
 
@@ -91,8 +103,29 @@ export default function RecipesPage() {
     };
 
     const handleDelete = async (id: string) => {
+        if (selectedRecipe && selectedRecipe.id === id) {
+            setSelectedRecipe(null);
+        }
         await deleteRecipe(id);
         loadLibrary();
+    };
+
+    const handleToggleFav = async (id: string, isFav: boolean) => {
+        await toggleFavorite(id, isFav);
+        loadLibrary();
+        if (selectedRecipe && selectedRecipe.id === id) {
+            setSelectedRecipe((prev: any) => prev ? { ...prev, isFavorite: isFav } : null);
+        }
+    };
+
+    const handleSavedIngredientSubstitution = async (ingId: string, value: string) => {
+        await updateIngredient(ingId, value);
+        const updatedLibrary = await getUserRecipes();
+        setLibrary(updatedLibrary);
+        if (selectedRecipe) {
+            const updatedSelected = updatedLibrary.find(r => r.id === selectedRecipe.id);
+            setSelectedRecipe(updatedSelected);
+        }
     };
 
     // Derive all tags from library
@@ -101,7 +134,12 @@ export default function RecipesPage() {
     // Filter library
     const filtered = library.filter(r => {
         const matchesSearch = !searchQuery || r.title.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesFolder = activeFolder === "All" || (r.tags || []).includes(activeFolder);
+        let matchesFolder = true;
+        if (activeFolder === "Favorites") {
+            matchesFolder = r.isFavorite;
+        } else if (activeFolder !== "All") {
+            matchesFolder = (r.tags || []).includes(activeFolder);
+        }
         return matchesSearch && matchesFolder;
     });
 
@@ -233,7 +271,11 @@ export default function RecipesPage() {
                         <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-3">FOLDERS</p>
                         <ul className="space-y-1">
                             {FOLDERS.map(folder => {
-                                const count = folder === "All" ? library.length : library.filter(r => (r.tags || []).includes(folder)).length;
+                                const count = folder === "All" 
+                                    ? library.length 
+                                    : folder === "Favorites"
+                                        ? library.filter(r => r.isFavorite).length
+                                        : library.filter(r => (r.tags || []).includes(folder)).length;
                                 const isActive = activeFolder === folder;
                                 return (
                                     <li key={folder}>
@@ -241,7 +283,7 @@ export default function RecipesPage() {
                                             className={`w-full text-left flex items-center justify-between px-3 py-2 rounded-lg text-[13px] font-medium transition-all ${isActive ? 'text-white' : 'text-zinc-600 hover:bg-zinc-50'}`}
                                             style={{ background: isActive ? "var(--brand-green-dark)" : "" }}>
                                             <span className="flex items-center gap-2">
-                                                <span>{isActive ? "🗂️" : "📁"}</span>
+                                                <span>{isActive ? (folder === "Favorites" ? "⭐" : "🗂️") : (folder === "Favorites" ? "☆" : "📁")}</span>
                                                 {folder}
                                             </span>
                                             <span className={`text-[11px] font-bold ${isActive ? "text-white/70" : "text-zinc-400"}`}>{count}</span>
@@ -296,7 +338,9 @@ export default function RecipesPage() {
                                 const source = getSource(item.id);
                                 const gradient = getGradient(item.id);
                                 return (
-                                    <div key={item.id} className="bg-white rounded-[20px] border border-zinc-200/80 overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
+                                    <div key={item.id} 
+                                        onClick={() => setSelectedRecipe(item)}
+                                        className="bg-white rounded-[20px] border border-zinc-200/80 overflow-hidden shadow-sm hover:shadow-md transition-shadow group cursor-pointer">
                                         {/* Color Block Header */}
                                         <div className={`h-[110px] bg-gradient-to-br ${gradient} relative`}>
                                             <span className="absolute top-3 left-3 px-2.5 py-1 bg-white/20 backdrop-blur-sm text-white text-[11px] font-bold rounded-full">
@@ -305,6 +349,10 @@ export default function RecipesPage() {
                                             <span className="absolute top-3 right-3 px-2.5 py-1 bg-black/20 backdrop-blur-sm text-white text-[11px] font-bold rounded-full">
                                                 {item.calories} cal/srv
                                             </span>
+                                            <button onClick={(e) => { e.stopPropagation(); handleToggleFav(item.id, !item.isFavorite); }}
+                                                className="absolute bottom-2 right-2 p-1.5 rounded-full bg-white/80 hover:bg-white shadow-sm transition-all hover:scale-110">
+                                                {item.isFavorite ? "❤️" : "🤍"}
+                                            </button>
                                         </div>
 
                                         {/* Card Body */}
@@ -312,7 +360,7 @@ export default function RecipesPage() {
                                             <h3 className="font-bold text-[15px] text-zinc-900 leading-tight mb-2">{item.title}</h3>
                                             <div className="flex items-center gap-3 text-zinc-400 text-[12px] mb-3">
                                                 <span className="flex items-center gap-1">⏱ {item.cookTime}m</span>
-                                                <span className="flex items-center gap-1">👥 {item.servings}</span>
+                                                <span className="flex items-center gap-1">👥 {item.servings || 2}</span>
                                             </div>
                                             <div className="flex flex-wrap gap-1.5 mb-3">
                                                 {(item.tags || []).map((tag: string) => (
@@ -321,7 +369,7 @@ export default function RecipesPage() {
                                                     </span>
                                                 ))}
                                             </div>
-                                            <button onClick={() => handleDelete(item.id)}
+                                            <button onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
                                                 className="text-[12px] font-semibold text-zinc-400 hover:text-red-500 transition-colors">
                                                 Remove from vault
                                             </button>
@@ -333,6 +381,106 @@ export default function RecipesPage() {
                     )}
                 </div>
             </div>
+
+            {/* Saved Recipe Details Modal */}
+            {selectedRecipe && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
+                    onClick={() => setSelectedRecipe(null)}>
+                    <div className="bg-white rounded-3xl w-full max-w-4xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+                        onClick={e => e.stopPropagation()}>
+                        
+                        {/* Header */}
+                        <div className="p-6 border-b border-zinc-100 flex justify-between items-start bg-zinc-50/60 flex-shrink-0">
+                            <div>
+                                <div className="flex items-center gap-3 mb-1">
+                                    <button onClick={() => handleToggleFav(selectedRecipe.id, !selectedRecipe.isFavorite)}
+                                        className="text-2xl hover:scale-110 transition-transform">
+                                        {selectedRecipe.isFavorite ? "❤️" : "🤍"}
+                                    </button>
+                                    <h2 className="text-xl font-bold text-zinc-900">{selectedRecipe.title}</h2>
+                                </div>
+                                <div className="flex gap-4 mt-2 text-zinc-500">
+                                    <span className="text-sm">⏱ {selectedRecipe.cookTime} min</span>
+                                    <span className="text-sm">🍽 {selectedRecipe.servings || 2} servings</span>
+                                    <span className="text-sm">🔥 {selectedRecipe.calories} kcal</span>
+                                </div>
+                            </div>
+                            <button onClick={() => setSelectedRecipe(null)}
+                                className="w-8 h-8 rounded-full border border-zinc-200 hover:bg-zinc-100 flex items-center justify-center font-bold text-zinc-500 text-sm">
+                                ✕
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-zinc-100">
+                            {/* Ingredients */}
+                            <div className="p-6">
+                                <h3 className="font-bold mb-4 flex items-center justify-between text-zinc-900">
+                                    <span>Ingredients</span>
+                                    <span className="text-xs font-semibold text-zinc-400">{(selectedRecipe.ingredients || []).length} items</span>
+                                </h3>
+                                <ul className="space-y-2">
+                                    {(selectedRecipe.ingredients || []).map((ing: any, i: number) => {
+                                        const suggestion = getSuggestionForIngredient(ing.originalName || ing.name);
+                                        return (
+                                            <li key={i} className={`flex items-center justify-between p-3 rounded-xl border ${ing.isSubstituted ? 'border-blue-200 bg-blue-50' : 'border-transparent bg-zinc-50'}`}>
+                                                <div>
+                                                    <span className="text-sm font-medium text-zinc-900">
+                                                        {ing.amount} {ing.unit} {ing.name}
+                                                    </span>
+                                                    {ing.isSubstituted && (
+                                                        <p className="text-xs font-bold text-blue-600 mt-0.5">
+                                                            🔄 Substituted for {ing.substituteFor}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                {suggestion && (
+                                                    <select 
+                                                        value={ing.isSubstituted ? `🔄 ${ing.name}` : `Original: ${ing.name}`}
+                                                        onChange={(e) => handleSavedIngredientSubstitution(ing.id, e.target.value)}
+                                                        className="text-xs px-2 py-1.5 rounded-lg font-bold cursor-pointer outline-none shadow-sm border border-zinc-100 bg-white text-[#2c7a51]">
+                                                        <option value={`Original: ${ing.originalName || ing.name}`}>Original: {ing.originalName || ing.name}</option>
+                                                        <option value={`🔄 ${suggestion}`}>🔄 {suggestion}</option>
+                                                    </select>
+                                                )}
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            </div>
+
+                            {/* Instructions */}
+                            <div className="p-6">
+                                <h3 className="font-bold mb-4 text-zinc-900">Instructions</h3>
+                                <ol className="space-y-4">
+                                    {(JSON.parse(selectedRecipe.instructions || "[]")).map((step: string, i: number) => (
+                                        <li key={i} className="flex gap-3">
+                                            <span className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white shadow-sm" style={{ background: "var(--brand-green)" }}>{i + 1}</span>
+                                            <p className="text-sm leading-relaxed text-zinc-500">{step}</p>
+                                        </li>
+                                    ))}
+                                </ol>
+                            </div>
+                        </div>
+
+                        {/* Macros Footer */}
+                        <div className="p-4 border-t border-zinc-100 grid grid-cols-4 divide-x divide-zinc-100 bg-zinc-50/60 flex-shrink-0">
+                            {[
+                                { label: "Calories", val: selectedRecipe.calories, unit: "kcal" },
+                                { label: "Protein", val: selectedRecipe.protein, unit: "g" },
+                                { label: "Carbs", val: selectedRecipe.carbs, unit: "g" },
+                                { label: "Fat", val: selectedRecipe.fat, unit: "g" },
+                            ].map(m => (
+                                <div key={m.label} className="px-4 text-center">
+                                    <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">{m.label}</p>
+                                    <p className="text-lg font-black" style={{ color: "var(--brand-green)" }}>{m.val}</p>
+                                    <p className="text-xs text-zinc-400">{m.unit}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

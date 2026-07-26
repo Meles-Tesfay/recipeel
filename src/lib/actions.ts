@@ -47,10 +47,51 @@ export async function getUserPreferences() {
     return prefs;
 }
 
+function getMacroAdjustment(originalName: string, substitutedName: string) {
+    const orig = originalName.toLowerCase();
+    const sub = substitutedName.toLowerCase();
+    
+    let calories = 0;
+    let protein = 0;
+    let carbs = 0;
+    let fat = 0;
+    
+    if (orig.includes("cream") && sub.includes("coconut")) {
+        calories = -150; protein = -2; carbs = -2; fat = -15;
+    } else if (orig.includes("parmesan") && sub.includes("yeast")) {
+        calories = -80; protein = -5; carbs = -2; fat = -7;
+    } else if (orig.includes("noodles") && sub.includes("rice")) {
+        calories = 0; protein = -4; carbs = 5; fat = 0;
+    } else if (orig.includes("chicken") && sub.includes("tofu")) {
+        calories = -200; protein = -20; carbs = 2; fat = -10;
+    } else if (orig.includes("soy") && sub.includes("coconut")) {
+        calories = -10; protein = 0; carbs = 2; fat = 0;
+    }
+    
+    return { calories, protein, carbs, fat };
+}
+
 // Recipes
 export async function saveRecipe(recipeData: any) {
     const user = await getSessionUser();
     
+    let finalCalories = recipeData.calories || 0;
+    let finalProtein = recipeData.protein || 0;
+    let finalCarbs = recipeData.carbs || 0;
+    let finalFat = recipeData.fat || 0;
+
+    if (recipeData.ingredients) {
+        recipeData.ingredients.forEach((ing: any) => {
+            if (ing.isSubstituted) {
+                const adj = getMacroAdjustment(ing.originalName || ing.name, ing.name);
+                finalCalories += adj.calories;
+                finalProtein += adj.protein;
+                finalCarbs += adj.carbs;
+                finalFat += adj.fat;
+            }
+        });
+    }
+
     // Insert recipe
     const [recipe] = await db.insert(recipes).values({
         userId: user.id,
@@ -58,10 +99,10 @@ export async function saveRecipe(recipeData: any) {
         originalUrl: recipeData.originalUrl,
         cookTime: recipeData.cookTime,
         instructions: JSON.stringify(recipeData.instructions),
-        calories: recipeData.calories,
-        protein: recipeData.protein,
-        carbs: recipeData.carbs,
-        fat: recipeData.fat,
+        calories: Math.max(0, finalCalories),
+        protein: Math.max(0, finalProtein),
+        carbs: Math.max(0, finalCarbs),
+        fat: Math.max(0, finalFat),
         tags: recipeData.tags || [],
     }).returning();
 
@@ -74,8 +115,9 @@ export async function saveRecipe(recipeData: any) {
                 amount: typeof ing.amount === 'string' ? parseFloat(ing.amount) || 0 : (ing.amount || 0),
                 unit: ing.unit || "unit",
                 originalName: ing.originalName || ing.name,
-                isSubstituted: ing.conflict ? true : false,
-                substituteFor: ing.conflict ? ing.name : null,
+                isSubstituted: ing.isSubstituted ? true : false,
+                substituteFor: ing.isSubstituted ? (ing.substituteFor || ing.originalName) : null,
+                substitutedWith: ing.isSubstituted ? ing.name : null,
             }))
         );
     }
@@ -114,12 +156,52 @@ export async function toggleFavorite(id: string, isFavorite: boolean) {
 }
 
 export async function updateIngredient(id: string, substitution: string) {
-    // Basic implementation for MVP, in a real app this would recalculate macros
+    const ing = await db.query.ingredients.findFirst({
+        where: eq(ingredientsTable.id, id)
+    });
+    if (!ing) throw new Error("Ingredient not found");
+    
+    const recipe = await db.query.recipes.findFirst({
+        where: eq(recipes.id, ing.recipeId)
+    });
+    if (!recipe) throw new Error("Recipe not found");
+
+    // 1. Determine old adjustment (if it was already substituted)
+    let oldAdj = { calories: 0, protein: 0, carbs: 0, fat: 0 };
+    if (ing.isSubstituted) {
+        oldAdj = getMacroAdjustment(ing.originalName || ing.name, ing.name);
+    }
+
+    // 2. Determine new adjustment
+    let newAdj = { calories: 0, protein: 0, carbs: 0, fat: 0 };
+    const isReverting = substitution === (ing.originalName || ing.name) || !substitution || substitution.startsWith("Original:");
+    const cleanSubName = substitution.replace("🔄 ", "").replace(/Original:\s*/, "");
+
+    if (!isReverting) {
+        newAdj = getMacroAdjustment(ing.originalName || ing.name, cleanSubName);
+    }
+
+    // 3. Calculate new recipe macros
+    const newCalories = Math.max(0, (recipe.calories || 0) - oldAdj.calories + newAdj.calories);
+    const newProtein = Math.max(0, (recipe.protein || 0) - oldAdj.protein + newAdj.protein);
+    const newCarbs = Math.max(0, (recipe.carbs || 0) - oldAdj.carbs + newAdj.carbs);
+    const newFat = Math.max(0, (recipe.fat || 0) - oldAdj.fat + newAdj.fat);
+
+    // 4. Update ingredient
     await db.update(ingredientsTable).set({
-        name: substitution,
-        isSubstituted: true,
-        substitutedWith: substitution
+        name: isReverting ? (ing.originalName || ing.name) : cleanSubName,
+        isSubstituted: !isReverting,
+        substitutedWith: isReverting ? null : cleanSubName,
+        substituteFor: isReverting ? null : (ing.originalName || ing.name)
     }).where(eq(ingredientsTable.id, id));
+
+    // 5. Update recipe
+    await db.update(recipes).set({
+        calories: newCalories,
+        protein: newProtein,
+        carbs: newCarbs,
+        fat: newFat
+    }).where(eq(recipes.id, recipe.id));
     
     return { success: true };
 }
