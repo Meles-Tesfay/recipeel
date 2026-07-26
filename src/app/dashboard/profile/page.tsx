@@ -36,6 +36,98 @@ const COOKING_OPTIONS = [
   { label: "Grilling", emoji: "🔥" },
 ];
 
+// Reusable checklist-style row component
+function CheckRow({
+  label,
+  emoji,
+  checked,
+  onToggle,
+  activeColor = "var(--brand-green)",
+  activeBg = "var(--brand-green-pale)",
+  activeText = "var(--brand-green-dark)",
+  checkColor = "var(--brand-green)",
+}: {
+  label: string;
+  emoji: string;
+  checked: boolean;
+  onToggle: () => void;
+  activeColor?: string;
+  activeBg?: string;
+  activeText?: string;
+  checkColor?: string;
+}) {
+  return (
+    <li
+      onClick={onToggle}
+      className="flex items-center p-3 cursor-pointer hover:bg-zinc-50/60 transition-colors rounded-xl group"
+      style={checked ? { background: activeBg } : {}}
+    >
+      {/* Custom circle checkbox on the left */}
+      <div className="relative flex items-center justify-center w-6 h-6 mr-4 flex-shrink-0">
+        <div
+          className="w-5 h-5 rounded-full border-[1.5px] transition-all flex items-center justify-center"
+          style={{
+            borderColor: checked ? checkColor : "#d4d4d8",
+            background: checked ? checkColor : "white",
+          }}
+        >
+          {checked && (
+            <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          )}
+        </div>
+      </div>
+
+      {/* Label */}
+      <span
+        className="text-[14px] font-medium flex-1 transition-colors"
+        style={{ color: checked ? activeText : "#3f3f46" }}
+      >
+        {label}
+      </span>
+    </li>
+  );
+}
+
+// Card wrapper for preference sections
+function PrefCard({
+  title,
+  subtitle,
+  icon,
+  count,
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  icon: string;
+  count: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="bg-white rounded-[20px] shadow-sm border border-zinc-200/80 overflow-hidden">
+      <div className="px-5 py-4 border-b border-zinc-100 flex items-center gap-4" style={{ background: "#f8faf9" }}>
+        <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl bg-[#e6f0eb] border border-[#d3e4dc]">
+          {icon}
+        </div>
+        <div>
+          <h2 className="font-semibold text-zinc-900 text-[15px] leading-tight">{title}</h2>
+          <span className="text-[12px] text-zinc-500">{subtitle}</span>
+        </div>
+        {count > 0 && (
+          <span className="ml-auto text-[12px] font-bold px-3 py-1 rounded-full"
+            style={{ background: "var(--brand-green-pale)", color: "var(--brand-green-dark)" }}>
+            {count} selected
+          </span>
+        )}
+      </div>
+      <ul className="divide-y divide-zinc-100/80 px-2 py-1">
+        {children}
+      </ul>
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -60,7 +152,6 @@ export default function ProfilePage() {
         getUserPreferences(),
         authClient.getSession(),
       ]);
-
       if (prefs) {
         setFormData({
           dietary: (prefs.dietary as string[]) || [],
@@ -106,34 +197,30 @@ export default function ProfilePage() {
     );
   }
 
-  const SaveButton = ({ bottom = false }) => (
-    <button
-      onClick={handleSave}
-      disabled={saving}
-      className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60 transition-all shadow-sm"
-      style={{ background: saved ? "#16a34a" : "var(--brand-green)" }}
-    >
-      {saving ? (
-        <><span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Saving...</>
-      ) : saved ? "✓ Saved!" : bottom ? "Save All Changes" : "Save Changes"}
-    </button>
-  );
-
   return (
-    <div className="p-8 max-w-4xl mx-auto space-y-8">
+    <div className="p-8 max-w-5xl mx-auto space-y-8">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-[28px] font-bold text-zinc-900 tracking-tight">My Profile</h1>
           <p className="text-[14px] text-zinc-500 mt-1">Update your dietary preferences, allergies, and nutrition goals.</p>
         </div>
-        <SaveButton />
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60 transition-all shadow-sm"
+          style={{ background: saved ? "#16a34a" : "var(--brand-green)" }}
+        >
+          {saving ? (
+            <><span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Saving...</>
+          ) : saved ? "✓ Saved!" : "Save Changes"}
+        </button>
       </div>
 
       {/* Account Info */}
       {sessionUser && (
         <div className="bg-white rounded-[20px] border border-zinc-200/80 p-6 shadow-sm">
-          <h2 className="font-bold text-zinc-900 mb-4">Account</h2>
+          <h2 className="font-semibold text-zinc-900 mb-4 text-[15px]">Account</h2>
           <div className="flex items-center gap-4">
             {sessionUser.image ? (
               <img src={sessionUser.image} alt={sessionUser.name} className="w-14 h-14 rounded-2xl object-cover" />
@@ -151,119 +238,153 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Dietary Preferences */}
-      <div className="bg-white rounded-[20px] border border-zinc-200/80 p-6 shadow-sm">
-        <h2 className="font-bold text-zinc-900 mb-1">Dietary Preferences</h2>
-        <p className="text-sm text-zinc-500 mb-5">Used to detect conflicts in imported recipes and suggest substitutions.</p>
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+      {/* Two-column layout for dietary + allergies */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {/* Dietary Preferences */}
+        <PrefCard
+          title="Dietary Preferences"
+          subtitle="Used to detect conflicts in imported recipes"
+          icon="🥗"
+          count={formData.dietary.length}
+        >
           {DIETARY_OPTIONS.map(({ label, emoji }) => (
-            <button key={label} onClick={() => toggle("dietary", label)}
-              className="flex flex-col items-center gap-2 p-3 rounded-xl border-2 text-sm font-medium transition-all"
-              style={{
-                borderColor: formData.dietary.includes(label) ? "var(--brand-green)" : "var(--border)",
-                background: formData.dietary.includes(label) ? "var(--brand-green-pale)" : "var(--surface-raised)",
-                color: formData.dietary.includes(label) ? "var(--brand-green-dark)" : "var(--foreground)",
-              }}>
-              <span className="text-2xl">{emoji}</span>
-              <span className="text-xs leading-tight text-center">{label}</span>
-            </button>
+            <CheckRow
+              key={label}
+              label={label}
+              emoji={emoji}
+              checked={formData.dietary.includes(label)}
+              onToggle={() => toggle("dietary", label)}
+            />
           ))}
-        </div>
-      </div>
+        </PrefCard>
 
-      {/* Food Allergies */}
-      <div className="bg-white rounded-[20px] border border-zinc-200/80 p-6 shadow-sm">
-        <h2 className="font-bold text-zinc-900 mb-1">Food Allergies</h2>
-        <p className="text-sm text-zinc-500 mb-5">Ingredients matching these will be automatically flagged as dangerous.</p>
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+        {/* Food Allergies */}
+        <PrefCard
+          title="Food Allergies"
+          subtitle="Flagged as dangerous in all imported recipes"
+          icon="⚠️"
+          count={formData.allergies.length}
+        >
           {ALLERGY_OPTIONS.map(({ label, emoji }) => (
-            <button key={label} onClick={() => toggle("allergies", label)}
-              className="flex flex-col items-center gap-2 p-3 rounded-xl border-2 text-sm font-medium transition-all"
-              style={{
-                borderColor: formData.allergies.includes(label) ? "#dc2626" : "var(--border)",
-                background: formData.allergies.includes(label) ? "#fef2f2" : "var(--surface-raised)",
-                color: formData.allergies.includes(label) ? "#dc2626" : "var(--foreground)",
-              }}>
-              <span className="text-2xl">{emoji}</span>
-              <span className="text-xs leading-tight text-center">{label}</span>
-            </button>
+            <CheckRow
+              key={label}
+              label={label}
+              emoji={emoji}
+              checked={formData.allergies.includes(label)}
+              onToggle={() => toggle("allergies", label)}
+              activeColor="#dc2626"
+              activeBg="#fef2f2"
+              activeText="#dc2626"
+              checkColor="#dc2626"
+            />
           ))}
-        </div>
+        </PrefCard>
       </div>
 
-      {/* Cooking Preferences */}
-      <div className="bg-white rounded-[20px] border border-zinc-200/80 p-6 shadow-sm">
-        <h2 className="font-bold text-zinc-900 mb-1">Cooking Style</h2>
-        <p className="text-sm text-zinc-500 mb-5">How do you prefer to cook?</p>
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+      {/* Cooking Style */}
+      <PrefCard
+        title="Cooking Style"
+        subtitle="How do you prefer to cook?"
+        icon="🍳"
+        count={formData.cookingPrefs.length}
+      >
+        <div className="grid grid-cols-2">
           {COOKING_OPTIONS.map(({ label, emoji }) => (
-            <button key={label} onClick={() => toggle("cookingPrefs", label)}
-              className="flex flex-col items-center gap-2 p-3 rounded-xl border-2 text-sm font-medium transition-all"
-              style={{
-                borderColor: formData.cookingPrefs.includes(label) ? "var(--brand-green)" : "var(--border)",
-                background: formData.cookingPrefs.includes(label) ? "var(--brand-green-pale)" : "var(--surface-raised)",
-                color: formData.cookingPrefs.includes(label) ? "var(--brand-green-dark)" : "var(--foreground)",
-              }}>
-              <span className="text-2xl">{emoji}</span>
-              <span className="text-xs leading-tight text-center">{label}</span>
-            </button>
+            <CheckRow
+              key={label}
+              label={label}
+              emoji={emoji}
+              checked={formData.cookingPrefs.includes(label)}
+              onToggle={() => toggle("cookingPrefs", label)}
+            />
           ))}
         </div>
-      </div>
+      </PrefCard>
 
       {/* Goals & Budget */}
-      <div className="bg-white rounded-[20px] border border-zinc-200/80 p-6 shadow-sm">
-        <h2 className="font-bold text-zinc-900 mb-5">Goals & Budget</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="bg-white rounded-[20px] border border-zinc-200/80 shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-zinc-100 flex items-center gap-4" style={{ background: "#f8faf9" }}>
+          <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl bg-[#e6f0eb] border border-[#d3e4dc]">🎯</div>
           <div>
-            <label className="block text-sm font-semibold mb-3 text-zinc-700">Fitness Goal</label>
-            <div className="grid grid-cols-3 gap-3">
+            <h2 className="font-semibold text-zinc-900 text-[15px] leading-tight">Goals & Budget</h2>
+            <span className="text-[12px] text-zinc-500">Personalize your meal recommendations</span>
+          </div>
+        </div>
+        <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <label className="block text-sm font-semibold mb-3 text-zinc-600 uppercase tracking-wider text-[11px]">Fitness Goal</label>
+            <ul className="space-y-1">
               {[
                 { label: "Weight Loss", emoji: "⬇️" },
                 { label: "Muscle Gain", emoji: "💪" },
                 { label: "Maintenance", emoji: "⚖️" },
               ].map(({ label, emoji }) => (
-                <button key={label} onClick={() => { setFormData(p => ({ ...p, fitnessGoals: label })); setSaved(false); }}
-                  className="flex flex-col items-center gap-2 p-3 rounded-xl border-2 text-sm font-medium transition-all"
-                  style={{
-                    borderColor: formData.fitnessGoals === label ? "var(--brand-green)" : "var(--border)",
-                    background: formData.fitnessGoals === label ? "var(--brand-green-pale)" : "var(--surface-raised)",
-                    color: formData.fitnessGoals === label ? "var(--brand-green-dark)" : "var(--foreground)",
-                  }}>
-                  <span className="text-2xl">{emoji}</span>
-                  <span className="text-xs text-center">{label}</span>
-                </button>
+                <li
+                  key={label}
+                  onClick={() => { setFormData(p => ({ ...p, fitnessGoals: label })); setSaved(false); }}
+                  className="flex items-center p-3 cursor-pointer rounded-xl transition-colors hover:bg-zinc-50/60"
+                  style={formData.fitnessGoals === label ? { background: "var(--brand-green-pale)" } : {}}
+                >
+                  <div className="relative flex items-center justify-center w-6 h-6 mr-4 flex-shrink-0">
+                    <div className="w-5 h-5 rounded-full border-[1.5px] flex items-center justify-center transition-all"
+                      style={{
+                        borderColor: formData.fitnessGoals === label ? "var(--brand-green)" : "#d4d4d8",
+                        background: formData.fitnessGoals === label ? "var(--brand-green)" : "white",
+                      }}>
+                      {formData.fitnessGoals === label && (
+                        <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-[14px] font-medium flex-1" style={{ color: formData.fitnessGoals === label ? "var(--brand-green-dark)" : "#3f3f46" }}>{label}</span>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
           <div>
-            <label className="block text-sm font-semibold mb-3 text-zinc-700">Weekly Grocery Budget</label>
-            <div className="grid grid-cols-3 gap-3">
+            <label className="block text-sm font-semibold mb-3 text-zinc-600 uppercase tracking-wider text-[11px]">Weekly Grocery Budget</label>
+            <ul className="space-y-1">
               {[
                 { label: "Budget", value: "$", emoji: "💰" },
                 { label: "Moderate", value: "$$", emoji: "💳" },
                 { label: "Premium", value: "$$$", emoji: "💎" },
               ].map(({ label, value, emoji }) => (
-                <button key={value} onClick={() => { setFormData(p => ({ ...p, budget: value })); setSaved(false); }}
-                  className="flex flex-col items-center gap-2 p-3 rounded-xl border-2 text-sm font-medium transition-all"
-                  style={{
-                    borderColor: formData.budget === value ? "var(--brand-green)" : "var(--border)",
-                    background: formData.budget === value ? "var(--brand-green-pale)" : "var(--surface-raised)",
-                    color: formData.budget === value ? "var(--brand-green-dark)" : "var(--foreground)",
-                  }}>
-                  <span className="text-2xl">{emoji}</span>
-                  <span className="text-xs text-center">{label}</span>
-                </button>
+                <li
+                  key={value}
+                  onClick={() => { setFormData(p => ({ ...p, budget: value })); setSaved(false); }}
+                  className="flex items-center p-3 cursor-pointer rounded-xl transition-colors hover:bg-zinc-50/60"
+                  style={formData.budget === value ? { background: "var(--brand-green-pale)" } : {}}
+                >
+                  <div className="relative flex items-center justify-center w-6 h-6 mr-4 flex-shrink-0">
+                    <div className="w-5 h-5 rounded-full border-[1.5px] flex items-center justify-center transition-all"
+                      style={{
+                        borderColor: formData.budget === value ? "var(--brand-green)" : "#d4d4d8",
+                        background: formData.budget === value ? "var(--brand-green)" : "white",
+                      }}>
+                      {formData.budget === value && (
+                        <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-[14px] font-medium" style={{ color: formData.budget === value ? "var(--brand-green-dark)" : "#3f3f46" }}>{label}</span>
+                  <span className="ml-auto text-[12px] font-bold text-zinc-400">{value}</span>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         </div>
       </div>
 
       {/* Daily Nutrition Goals */}
-      <div className="bg-white rounded-[20px] border border-zinc-200/80 p-6 shadow-sm">
-        <h2 className="font-bold text-zinc-900 mb-5">Daily Nutrition Goals</h2>
-        <div className="space-y-6">
+      <div className="bg-white rounded-[20px] border border-zinc-200/80 shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-zinc-100 flex items-center gap-4" style={{ background: "#f8faf9" }}>
+          <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl bg-[#e6f0eb] border border-[#d3e4dc]">📊</div>
+          <div>
+            <h2 className="font-semibold text-zinc-900 text-[15px] leading-tight">Daily Nutrition Goals</h2>
+            <span className="text-[12px] text-zinc-500">Tracked automatically from your meal plan</span>
+          </div>
+        </div>
+        <div className="p-5 space-y-6">
           {[
             { key: "dailyCalories", label: "Daily Calories", unit: "kcal", min: 1000, max: 4000, step: 50, color: "var(--brand-green)" },
             { key: "dailyProtein", label: "Protein", unit: "g", min: 50, max: 300, step: 5, color: "#ef4444" },
@@ -296,7 +417,14 @@ export default function ProfilePage() {
 
       {/* Bottom Save */}
       <div className="flex justify-end pb-4">
-        <SaveButton bottom />
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60 transition-all shadow-sm"
+          style={{ background: saved ? "#16a34a" : "var(--brand-green)" }}
+        >
+          {saving ? "Saving..." : saved ? "✓ Preferences Saved!" : "Save All Changes"}
+        </button>
       </div>
     </div>
   );
