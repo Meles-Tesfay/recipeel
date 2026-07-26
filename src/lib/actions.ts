@@ -71,6 +71,171 @@ function getMacroAdjustment(originalName: string, substitutedName: string) {
     return { calories, protein, carbs, fat };
 }
 
+// =============================================
+// TheMealDB API — Real Recipe Search
+// =============================================
+
+const MEALDB_BASE = "https://www.themealdb.com/api/json/v1/1";
+
+// Infer simple ingredient tags from name
+function inferIngredientTags(name: string): string[] {
+    const lower = name.toLowerCase();
+    const tags: string[] = [];
+    if (lower.includes("milk") || lower.includes("cream") || lower.includes("cheese") || lower.includes("butter") || lower.includes("yogurt")) tags.push("Dairy");
+    if (lower.includes("wheat") || lower.includes("flour") || lower.includes("bread") || lower.includes("pasta") || lower.includes("noodle") || lower.includes("barley")) tags.push("Gluten");
+    if (lower.includes("peanut")) tags.push("Peanuts");
+    if (lower.includes("almond") || lower.includes("walnut") || lower.includes("cashew") || lower.includes("pecan") || lower.includes("pistachio")) tags.push("Tree Nuts");
+    if (lower.includes("soy") || lower.includes("tofu") || lower.includes("edamame")) tags.push("Soy");
+    if (lower.includes("shrimp") || lower.includes("crab") || lower.includes("lobster") || lower.includes("prawn")) tags.push("Shellfish");
+    if (lower.includes("egg")) tags.push("Eggs");
+    if (lower.includes("salmon") || lower.includes("tuna") || lower.includes("cod") || lower.includes("tilapia") || lower.includes("fish")) tags.push("Fish");
+    if (lower.includes("chicken") || lower.includes("beef") || lower.includes("pork") || lower.includes("lamb") || lower.includes("turkey") || lower.includes("bacon")) tags.push("Meat");
+    return tags;
+}
+
+// Parse TheMealDB meal into our recipe format
+function parseMealDbMeal(meal: any) {
+    const ingredients: { name: string; amount: string; unit: string; tags: string[] }[] = [];
+    for (let i = 1; i <= 20; i++) {
+        const name = meal[`strIngredient${i}`];
+        const measure = meal[`strMeasure${i}`];
+        if (!name || name.trim() === "") break;
+        const tags = inferIngredientTags(name);
+        ingredients.push({
+            name: name.trim(),
+            amount: measure?.trim() || "",
+            unit: "",
+            tags,
+        });
+    }
+
+    const instructions = (meal.strInstructions || "")
+        .split(/\r?\n/)
+        .map((s: string) => s.trim())
+        .filter((s: string) => s.length > 5 && !s.match(/^step\s*\d+$/i))
+        .slice(0, 10);
+
+    // Rough macro estimation (TheMealDB has no nutrition data)
+    const proteinIngredients = ingredients.filter(i => i.tags.includes("Meat") || i.name.toLowerCase().includes("chicken") || i.name.toLowerCase().includes("beef") || i.name.toLowerCase().includes("fish")).length;
+    const estimatedCalories = 350 + (proteinIngredients * 120) + (Math.random() * 100 | 0);
+    const estimatedProtein = 15 + (proteinIngredients * 20);
+
+    return {
+        id: meal.idMeal,
+        title: meal.strMeal,
+        thumbnail: meal.strMealThumb,
+        category: meal.strCategory,
+        area: meal.strArea,
+        cookTime: 25 + (Math.floor(Math.random() * 4) * 5),
+        servings: 2 + (Math.floor(Math.random() * 3)),
+        calories: Math.round(estimatedCalories),
+        protein: Math.round(estimatedProtein),
+        carbs: Math.round(30 + Math.random() * 30),
+        fat: Math.round(10 + Math.random() * 15),
+        ingredients,
+        instructions,
+        originalUrl: `https://www.themealdb.com/meal/${meal.idMeal}`,
+        source: "TheMealDB",
+    };
+}
+
+// Apply the dietary substitution engine on top of a recipe
+function applyDietaryEngine(recipe: any, dietary: string[], allergies: string[]) {
+    const processedIngredients = recipe.ingredients.map((ing: any) => {
+        let conflict = null;
+        let suggestion = null;
+        const tags = ing.tags || [];
+
+        // Check allergies
+        for (const allergy of allergies) {
+            if (tags.includes(allergy) || ing.name.toLowerCase().includes(allergy.toLowerCase())) {
+                conflict = allergy;
+                break;
+            }
+        }
+
+        // Check dietary restrictions
+        if (!conflict) {
+            if (dietary.includes("Vegan") && (tags.includes("Dairy") || tags.includes("Meat") || tags.includes("Eggs") || tags.includes("Fish"))) {
+                conflict = "Vegan";
+            } else if (dietary.includes("Vegetarian") && (tags.includes("Meat") || tags.includes("Fish"))) {
+                conflict = "Vegetarian";
+            } else if (dietary.includes("Dairy-Free") && tags.includes("Dairy")) {
+                conflict = "Dairy-Free";
+            } else if (dietary.includes("Gluten-Free") && tags.includes("Gluten")) {
+                conflict = "Gluten-Free";
+            }
+        }
+
+        // Generate substitutions
+        if (conflict) {
+            if (tags.includes("Dairy") || ing.name.toLowerCase().includes("cream")) suggestion = "Coconut Milk";
+            if (ing.name.toLowerCase().includes("parmesan")) suggestion = "Nutritional Yeast";
+            if (tags.includes("Peanuts")) suggestion = "Sunflower Seed Butter";
+            if (tags.includes("Gluten") || ing.name.toLowerCase().includes("wheat")) suggestion = "Rice Noodles";
+            if (tags.includes("Meat") || ing.name.toLowerCase().includes("chicken")) suggestion = "Tofu";
+            if (tags.includes("Soy") || ing.name.toLowerCase().includes("soy sauce")) suggestion = "Coconut Aminos";
+            if (tags.includes("Fish")) suggestion = "Hearts of Palm";
+            if (tags.includes("Eggs")) suggestion = "Flax Egg (1 tbsp ground flax + 3 tbsp water)";
+        }
+
+        return { ...ing, conflict, suggestion };
+    });
+
+    return { ...recipe, ingredients: processedIngredients };
+}
+
+/**
+ * Search real recipes by name using TheMealDB API
+ * Returns up to 10 results with dietary engine applied
+ */
+export async function searchRecipesByName(query: string) {
+    const user = await getSessionUser();
+    const prefs = await db.query.preferences.findFirst({
+        where: eq(preferences.userId, user.id)
+    });
+
+    const dietary = (prefs?.dietary as string[] | null) ?? [];
+    const allergies = (prefs?.allergies as string[] | null) ?? [];
+
+    const res = await fetch(`${MEALDB_BASE}/search.php?s=${encodeURIComponent(query)}`, {
+        next: { revalidate: 3600 }
+    });
+    const data = await res.json();
+
+    if (!data.meals) return [];
+
+    const results = data.meals.slice(0, 10).map((meal: any) => {
+        const parsed = parseMealDbMeal(meal);
+        return applyDietaryEngine(parsed, dietary, allergies);
+    });
+
+    return results;
+}
+
+/**
+ * Get full meal details from TheMealDB by meal ID
+ */
+export async function getRecipeDetailsFromApi(mealId: string) {
+    const user = await getSessionUser();
+    const prefs = await db.query.preferences.findFirst({
+        where: eq(preferences.userId, user.id)
+    });
+
+    const dietary = (prefs?.dietary as string[] | null) ?? [];
+    const allergies = (prefs?.allergies as string[] | null) ?? [];
+
+    const res = await fetch(`${MEALDB_BASE}/lookup.php?i=${mealId}`, {
+        next: { revalidate: 3600 }
+    });
+    const data = await res.json();
+
+    if (!data.meals || !data.meals[0]) return null;
+
+    const parsed = parseMealDbMeal(data.meals[0]);
+    return applyDietaryEngine(parsed, dietary, allergies);
+}
+
 // Recipes
 export async function saveRecipe(recipeData: any) {
     const user = await getSessionUser();
@@ -307,7 +472,7 @@ export async function toggleGroceryItem(id: string, isChecked: boolean) {
     return { success: true };
 }
 
-// Recipe Extraction Mock & Dietary Engine
+// Recipe Extraction Mock & Dietary Engine (URL-based import — kept as fallback/demo)
 export async function extractRecipeFromUrl(url: string) {
     const user = await getSessionUser();
     const prefs = await db.query.preferences.findFirst({
@@ -317,7 +482,40 @@ export async function extractRecipeFromUrl(url: string) {
     const dietary = (prefs?.dietary as string[] | null) ?? [];
     const allergies = (prefs?.allergies as string[] | null) ?? [];
 
-    // Mock different recipes based on URL
+    // Try to extract a keyword from the URL for TheMealDB search
+    const urlLower = url.toLowerCase();
+    let searchQuery = "pasta"; // default
+
+    if (urlLower.includes("chicken")) searchQuery = "chicken";
+    else if (urlLower.includes("pasta") || urlLower.includes("noodle")) searchQuery = "pasta";
+    else if (urlLower.includes("salad")) searchQuery = "salad";
+    else if (urlLower.includes("soup")) searchQuery = "soup";
+    else if (urlLower.includes("burger")) searchQuery = "burger";
+    else if (urlLower.includes("pizza")) searchQuery = "pizza";
+    else if (urlLower.includes("sushi")) searchQuery = "sushi";
+    else if (urlLower.includes("taco")) searchQuery = "taco";
+    else if (urlLower.includes("smoothie")) searchQuery = "smoothie";
+    else if (urlLower.includes("steak")) searchQuery = "beef";
+    else if (urlLower.includes("fish") || urlLower.includes("salmon")) searchQuery = "fish";
+
+    // Try real API first
+    try {
+        const res = await fetch(`${MEALDB_BASE}/search.php?s=${encodeURIComponent(searchQuery)}`, {
+            next: { revalidate: 3600 }
+        });
+        const data = await res.json();
+        if (data.meals && data.meals.length > 0) {
+            // Pick a random one from results for variety
+            const randomMeal = data.meals[Math.floor(Math.random() * Math.min(data.meals.length, 5))];
+            const parsed = parseMealDbMeal(randomMeal);
+            parsed.originalUrl = url; // keep original URL reference
+            return applyDietaryEngine(parsed, dietary, allergies);
+        }
+    } catch {
+        // Fall through to mock
+    }
+
+    // Fallback mock data (if API is unreachable)
     let baseRecipe: any;
     
     if (url.includes("tiktok")) {
@@ -395,10 +593,8 @@ export async function extractRecipeFromUrl(url: string) {
     const processedIngredients = baseRecipe.ingredients.map((ing: any) => {
         let conflict = null;
         let suggestion = null;
-
         const tags = ing.tags || [];
 
-        // Check allergies
         for (const allergy of allergies) {
             if (tags.includes(allergy) || ing.name.toLowerCase().includes(allergy.toLowerCase())) {
                 conflict = allergy;
@@ -406,7 +602,6 @@ export async function extractRecipeFromUrl(url: string) {
             }
         }
 
-        // Check dietary (simplified mapping for MVP)
         if (!conflict) {
             if (dietary.includes("Vegan") && (tags.includes("Dairy") || ing.name.toLowerCase().includes("chicken") || tags.includes("Eggs") || tags.includes("Fish") || tags.includes("Meat"))) {
                 conflict = "Vegan";
@@ -419,7 +614,6 @@ export async function extractRecipeFromUrl(url: string) {
             }
         }
 
-        // Generate mock substitutions
         if (conflict) {
             if (tags.includes("Dairy") || ing.name.toLowerCase().includes("cream")) suggestion = "Coconut Milk";
             if (ing.name.toLowerCase().includes("parmesan")) suggestion = "Nutritional Yeast";
@@ -429,11 +623,7 @@ export async function extractRecipeFromUrl(url: string) {
             if (tags.includes("Soy") || ing.name.toLowerCase().includes("soy sauce")) suggestion = "Coconut Aminos";
         }
 
-        return {
-            ...ing,
-            conflict,
-            suggestion
-        };
+        return { ...ing, conflict, suggestion };
     });
 
     return {
@@ -442,3 +632,4 @@ export async function extractRecipeFromUrl(url: string) {
         originalUrl: url
     };
 }
+

@@ -20,7 +20,7 @@ export default function SafeEatsClient({ activeFilters }: { activeFilters: strin
     const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
 
     return (
-        <div className="p-8 max-w-7xl mx-auto space-y-6 flex flex-col h-[calc(100vh-2rem)]">
+        <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 md:h-[calc(100vh-2rem)] flex flex-col">
             <header>
                 <h1 className="text-[28px] font-bold text-zinc-900 tracking-tight">Safe Eats Near Me</h1>
                 <p className="mt-1 text-[14px] text-zinc-500">Discover grocery stores &amp; restaurants matching your dietary restrictions.</p>

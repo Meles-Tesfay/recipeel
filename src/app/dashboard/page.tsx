@@ -63,7 +63,7 @@ export default async function DashboardPage() {
   };
 
   return (
-    <div className="p-8 max-w-5xl mx-auto space-y-8">
+    <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6 md:space-y-8">
       {/* Welcome */}
       <header>
         <h1 className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>

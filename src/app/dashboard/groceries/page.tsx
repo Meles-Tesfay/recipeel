@@ -64,7 +64,7 @@ export default function GroceriesPage() {
     }
 
     return (
-        <div className="p-8 max-w-6xl mx-auto space-y-8">
+        <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6 md:space-y-8">
             <header className="flex justify-between items-start mb-10">
                 <div>
                     <h1 className="text-[32px] font-bold text-zinc-900 tracking-tight">Grocery List</h1>

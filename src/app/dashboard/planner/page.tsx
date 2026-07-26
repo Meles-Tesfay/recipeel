@@ -76,7 +76,7 @@ export default function PlannerPage() {
     const dash = (calsPct / 100) * circ;
 
     return (
-        <div className="p-8 max-w-[1400px] mx-auto space-y-8">
+        <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6 md:space-y-8">
             {/* Header */}
             <header className="flex justify-between items-center">
                 <div>

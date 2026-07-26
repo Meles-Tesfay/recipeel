@@ -16,7 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} antialiased`} suppressHydrationWarning>
-      <body className={`min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-950 dark:text-zinc-50 font-sans`}>
+      <body className="min-h-screen font-sans" style={{ background: "var(--background)", color: "var(--foreground)" }}>
         {children}
       </body>
     </html>
