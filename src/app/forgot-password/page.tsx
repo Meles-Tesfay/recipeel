@@ -40,21 +40,20 @@ export default function ForgotPasswordPage() {
 
         {/* Icon */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 shadow-sm"
             style={{ background: "var(--brand-green)" }}>
             <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>Reset your password</h1>
-          <p className="text-sm mt-1 text-center" style={{ color: "var(--muted)" }}>
+          <h1 className="text-[28px] font-bold text-zinc-900 tracking-tight">Reset your password</h1>
+          <p className="text-[15px] mt-1.5 text-center text-zinc-500">
             Enter your email and we'll send you a link to reset your password.
           </p>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-sm border p-6 space-y-4"
-          style={{ borderColor: "var(--border)" }}>
+        <div className="bg-white rounded-[24px] shadow-sm border border-zinc-200/80 p-6 sm:p-8 space-y-5">
 
           {success ? (
             <div className="flex flex-col items-center py-4">
@@ -75,15 +74,14 @@ export default function ForgotPasswordPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Email */}
               <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--foreground)" }}>Email</label>
+                <label className="block text-sm font-medium mb-1.5 text-zinc-900">Email</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--muted)" }}>
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                   </span>
                   <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
                     placeholder="you@example.com"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border text-sm outline-none focus:ring-2"
-                    style={{ borderColor: "var(--border)", background: "var(--surface-raised)" }}
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-zinc-200 text-[15px] outline-none focus:ring-2 bg-zinc-50 focus:bg-white transition-colors"
                   />
                 </div>
               </div>
@@ -93,7 +91,7 @@ export default function ForgotPasswordPage() {
               )}
 
               <button type="submit" disabled={loading || !email}
-                className="w-full py-2.5 rounded-lg text-white font-semibold text-sm hover:opacity-90 disabled:opacity-60 mt-2 transition-opacity"
+                className="w-full py-3 rounded-xl text-white font-semibold text-[15px] hover:opacity-90 disabled:opacity-60 mt-4 transition-all shadow-sm"
                 style={{ background: "var(--brand-green)" }}>
                 {loading ? "Sending link..." : "Send reset link"}
               </button>
@@ -101,7 +99,7 @@ export default function ForgotPasswordPage() {
           )}
         </div>
 
-        <p className="text-center text-sm mt-5" style={{ color: "var(--muted)" }}>
+        <p className="text-center text-[14px] mt-6 text-zinc-500">
           <Link href="/login" className="font-semibold hover:underline flex items-center justify-center gap-1" style={{ color: "var(--brand-green)" }}>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
             Back to login

@@ -64,19 +64,18 @@ export default function RegisterPage() {
 
         {/* Icon */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 shadow-sm"
             style={{ background: "var(--brand-green)" }}>
             <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>Create your account</h1>
-          <p className="text-sm mt-1" style={{ color: "var(--muted)" }}>Sign up to get started</p>
+          <h1 className="text-[28px] font-bold text-zinc-900 tracking-tight">Create your account</h1>
+          <p className="text-[15px] mt-1.5 text-zinc-500">Sign up to get started</p>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-sm border p-6 space-y-4"
-          style={{ borderColor: "var(--border)" }}>
+        <div className="bg-white rounded-[24px] shadow-sm border border-zinc-200/80 p-6 sm:p-8 space-y-5">
 
           {/* Google Login */}
           <button 
@@ -102,54 +101,50 @@ export default function RegisterPage() {
 
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--foreground)" }}>Full Name</label>
+            <label className="block text-sm font-medium mb-1.5 text-zinc-900">Full Name</label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--muted)" }}>
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
               </span>
               <input type="text" value={name} onChange={e => setName(e.target.value)} required
                 placeholder="John Smith"
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border text-sm outline-none focus:ring-2"
-                style={{ borderColor: "var(--border)", background: "var(--surface-raised)" }}
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-zinc-200 text-[15px] outline-none focus:ring-2 bg-zinc-50 focus:bg-white transition-colors"
               />
             </div>
           </div>
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--foreground)" }}>Email</label>
+            <label className="block text-sm font-medium mb-1.5 text-zinc-900">Email</label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--muted)" }}>
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
               </span>
               <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
                 placeholder="you@example.com"
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border text-sm outline-none focus:ring-2"
-                style={{ borderColor: "var(--border)", background: "var(--surface-raised)" }}
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-zinc-200 text-[15px] outline-none focus:ring-2 bg-zinc-50 focus:bg-white transition-colors"
               />
             </div>
           </div>
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--foreground)" }}>Password</label>
+            <label className="block text-sm font-medium mb-1.5 text-zinc-900">Password</label>
             <div className="relative mb-2">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--muted)" }}>
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
               </span>
               <input type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} required
                 placeholder="••••••••"
-                className="w-full pl-10 pr-10 py-2.5 rounded-lg border text-sm outline-none focus:ring-2"
-                style={{ borderColor: "var(--border)", background: "var(--surface-raised)" }}
+                className="w-full pl-10 pr-10 py-3 rounded-xl border border-zinc-200 text-[15px] outline-none focus:ring-2 bg-zinc-50 focus:bg-white transition-colors"
               />
               <button 
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 hover:opacity-70 transition-opacity"
-                style={{ color: "var(--muted)" }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 hover:text-zinc-600 transition-colors text-zinc-400"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPassword ? <EyeOff className="w-[18px] h-[18px]" /> : <Eye className="w-[18px] h-[18px]" />}
               </button>
             </div>
             
@@ -173,24 +168,22 @@ export default function RegisterPage() {
 
           {/* Confirm Password */}
           <div>
-            <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--foreground)" }}>Confirm Password</label>
+            <label className="block text-sm font-medium mb-1.5 text-zinc-900">Confirm Password</label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--muted)" }}>
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
               </span>
               <input type={showConfirm ? "text" : "password"} value={confirm} onChange={e => setConfirm(e.target.value)} required
                 placeholder="••••••••"
-                className="w-full pl-10 pr-10 py-2.5 rounded-lg border text-sm outline-none focus:ring-2"
-                style={{ borderColor: "var(--border)", background: "var(--surface-raised)" }}
+                className="w-full pl-10 pr-10 py-3 rounded-xl border border-zinc-200 text-[15px] outline-none focus:ring-2 bg-zinc-50 focus:bg-white transition-colors"
               />
               <button 
                 type="button"
                 onClick={() => setShowConfirm(!showConfirm)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 hover:opacity-70 transition-opacity"
-                style={{ color: "var(--muted)" }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 hover:text-zinc-600 transition-colors text-zinc-400"
                 aria-label={showConfirm ? "Hide confirm password" : "Show confirm password"}
               >
-                {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showConfirm ? <EyeOff className="w-[18px] h-[18px]" /> : <Eye className="w-[18px] h-[18px]" />}
               </button>
             </div>
           </div>
@@ -201,14 +194,14 @@ export default function RegisterPage() {
 
           {/* Submit */}
           <button onClick={handleSubmit} disabled={loading}
-            className="w-full py-2.5 rounded-lg text-white font-semibold text-sm hover:opacity-90 disabled:opacity-60 mt-2 transition-opacity"
+            className="w-full py-3 rounded-xl text-white font-semibold text-[15px] hover:opacity-90 disabled:opacity-60 mt-4 transition-all shadow-sm"
             style={{ background: "var(--brand-green)" }}>
             {loading ? "Creating account..." : "Create account"}
           </button>
         </div>
 
         {/* Footer */}
-        <p className="text-center text-sm mt-5" style={{ color: "var(--muted)" }}>
+        <p className="text-center text-[14px] mt-6 text-zinc-500">
           Already have an account?{" "}
           <Link href="/login" className="font-semibold hover:underline" style={{ color: "var(--brand-green)" }}>
             Log in
