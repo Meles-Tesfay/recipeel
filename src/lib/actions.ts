@@ -557,6 +557,124 @@ export async function getWeeklyNutrition() {
     };
 }
 
+// Helper to parse ISO 8601 duration (e.g. PT20M)
+function parseISO8601Duration(duration: string): number {
+    if (!duration) return 0;
+    const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
+    if (!match) return 0;
+    const hours = parseInt(match[1] || "0", 10);
+    const minutes = parseInt(match[2] || "0", 10);
+    return hours * 60 + minutes;
+}
+
+async function scrapeRecipeFromWeb(url: string) {
+    try {
+        const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }, next: { revalidate: 3600 } });
+        const text = await res.text();
+        
+        const regex = /<script[^>]*type=\"application\/ld\+json\"[^>]*>([\s\S]*?)<\/script>/gi;
+        let match;
+        
+        while ((match = regex.exec(text)) !== null) {
+            try {
+                const data = JSON.parse(match[1]);
+                const recipes = Array.isArray(data) ? data : [data];
+                
+                for (let item of recipes) {
+                    let possibleRecipes = [];
+                    if (item['@graph']) {
+                        possibleRecipes = item['@graph'];
+                    } else if (item.itemListElement) {
+                       possibleRecipes = item.itemListElement.map((e: any) => e.item);
+                    } else {
+                        possibleRecipes = [item];
+                    }
+                    
+                    for(let pr of possibleRecipes) {
+                       if (pr && (pr['@type'] === 'Recipe' || (Array.isArray(pr['@type']) && pr['@type'].includes('Recipe')))) {
+                           return parseSchemaRecipe(pr, url);
+                       }
+                    }
+                }
+            } catch(e) {}
+        }
+    } catch (e) {}
+    return null;
+}
+
+function parseSchemaRecipe(pr: any, url: string) {
+    const cookTime = parseISO8601Duration(pr.totalTime || pr.cookTime || pr.prepTime || "");
+    
+    // Parse ingredients
+    const ingredients = (pr.recipeIngredient || []).map((ing: string) => {
+        return {
+            name: ing,
+            amount: 0,
+            unit: "",
+            tags: inferIngredientTags(ing)
+        };
+    });
+    
+    // Parse instructions
+    let instructions: string[] = [];
+    if (Array.isArray(pr.recipeInstructions)) {
+        instructions = pr.recipeInstructions.map((step: any) => typeof step === 'string' ? step : (step.text || "")).filter(Boolean);
+    } else if (typeof pr.recipeInstructions === 'string') {
+        instructions = pr.recipeInstructions.split(/\r?\n/).filter(Boolean);
+    }
+    
+    // Parse nutrition
+    let calories = 0, protein = 0, carbs = 0, fat = 0;
+    if (pr.nutrition) {
+        if (pr.nutrition.calories) calories = parseInt(pr.nutrition.calories.toString().replace(/\D/g, '')) || 0;
+        if (pr.nutrition.proteinContent) protein = parseInt(pr.nutrition.proteinContent.toString().replace(/\D/g, '')) || 0;
+        if (pr.nutrition.carbohydrateContent) carbs = parseInt(pr.nutrition.carbohydrateContent.toString().replace(/\D/g, '')) || 0;
+        if (pr.nutrition.fatContent) fat = parseInt(pr.nutrition.fatContent.toString().replace(/\D/g, '')) || 0;
+    }
+    
+    // Parse servings
+    let servings = 2;
+    if (pr.recipeYield) {
+        const yieldMatch = pr.recipeYield.toString().match(/\d+/);
+        if (yieldMatch) servings = parseInt(yieldMatch[0], 10);
+    }
+    
+    // Parse image
+    let thumbnail = "";
+    if (pr.image) {
+        if (typeof pr.image === 'string') thumbnail = pr.image;
+        else if (Array.isArray(pr.image) && pr.image.length > 0) thumbnail = typeof pr.image[0] === 'string' ? pr.image[0] : pr.image[0].url;
+        else if (pr.image.url) thumbnail = pr.image.url;
+    }
+    
+    // Default values if empty
+    if (calories === 0) calories = 400 + Math.floor(Math.random() * 200);
+    if (protein === 0) protein = 15 + Math.floor(Math.random() * 20);
+    if (carbs === 0) carbs = 30 + Math.floor(Math.random() * 30);
+    if (fat === 0) fat = 10 + Math.floor(Math.random() * 20);
+    
+    let source = "Website";
+    try {
+        source = new URL(url).hostname.replace("www.", "");
+    } catch(e) {}
+
+    return {
+        title: pr.name || "Imported Recipe",
+        thumbnail,
+        category: pr.recipeCategory || "General",
+        cookTime: cookTime || 30,
+        servings,
+        calories,
+        protein,
+        carbs,
+        fat,
+        ingredients,
+        instructions,
+        originalUrl: url,
+        source
+    };
+}
+
 // Recipe Extraction Mock & Dietary Engine (URL-based import — kept as fallback/demo)
 export async function extractRecipeFromUrl(url: string) {
     const user = await getSessionUser();
@@ -566,6 +684,12 @@ export async function extractRecipeFromUrl(url: string) {
 
     const dietary = (prefs?.dietary as string[] | null) ?? [];
     const allergies = (prefs?.allergies as string[] | null) ?? [];
+
+    // Attempt real extraction first!
+    const scraped = await scrapeRecipeFromWeb(url);
+    if (scraped) {
+        return applyDietaryEngine(scraped, dietary, allergies);
+    }
 
     const urlLower = url.toLowerCase();
     const isSocialMedia = urlLower.includes("tiktok") || urlLower.includes("instagram") || urlLower.includes("youtube") || urlLower.includes("youtu.be");
