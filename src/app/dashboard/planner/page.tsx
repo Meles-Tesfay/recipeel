@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getUserRecipes, getMealPlan, saveMealPlan, generateGroceryList, getUserPreferences } from "@/lib/actions";
+import { getUserRecipes, getMealPlan, saveMealPlan, generateGroceryList, getUserPreferences, deleteMealPlan } from "@/lib/actions";
 import { useRouter } from "next/navigation";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -18,6 +18,7 @@ const MEAL_COLORS: Record<string, string> = {
 export default function PlannerPage() {
     const router = useRouter();
     const [plannerData, setPlannerData] = useState<Record<string, Record<string, any>>>({});
+    const [plannerIdMap, setPlannerIdMap] = useState<Record<string, string>>({});
     const [library, setLibrary] = useState<any[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedSlot, setSelectedSlot] = useState<{ day: string, type: string } | null>(null);
@@ -35,12 +36,17 @@ export default function PlannerPage() {
         setLibrary(recipes);
         if (prefs?.dailyCalories) setGoalCals(prefs.dailyCalories);
         const dataMap: Record<string, Record<string, any>> = {};
+        const idMap: Record<string, string> = {};
         for (const day of DAYS_FULL) dataMap[day] = {};
         plans.forEach((plan: any) => {
             const [day, type] = plan.mealType.split("-");
-            if (dataMap[day]) dataMap[day][type] = plan.recipe;
+            if (dataMap[day]) {
+                dataMap[day][type] = plan.recipe;
+                idMap[`${day}-${type}`] = plan.id;
+            }
         });
         setPlannerData(dataMap);
+        setPlannerIdMap(idMap);
     };
 
     const openModal = (day: string, type: string) => {
@@ -52,6 +58,14 @@ export default function PlannerPage() {
         if (!selectedSlot) return;
         setIsModalOpen(false);
         await saveMealPlan(new Date(), `${selectedSlot.day}-${selectedSlot.type}`, recipeId);
+        await loadData();
+    };
+
+    const handleRemoveMeal = async (day: string, type: string) => {
+        const key = `${day}-${type}`;
+        const id = plannerIdMap[key];
+        if (!id) return;
+        await deleteMealPlan(id);
         await loadData();
     };
 
@@ -175,7 +189,7 @@ export default function PlannerPage() {
                                         style={{ borderColor: meal ? "transparent" : "#e4e4e7", background: meal ? "white" : "transparent" }}
                                     >
                                         {meal ? (
-                                            <div>
+                                            <div className="relative group/card">
                                                 <div className="h-1.5 w-full" style={{ background: color }} />
                                                 <div className="p-2.5">
                                                     <p className="text-[12px] font-semibold text-zinc-800 leading-tight line-clamp-2">{meal.title}</p>
@@ -183,6 +197,14 @@ export default function PlannerPage() {
                                                         <svg className="w-3 h-3 inline mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" /></svg> {meal.calories} cal · {meal.protein}p
                                                     </p>
                                                 </div>
+                                                {/* Remove button */}
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); handleRemoveMeal(day, type); }}
+                                                    className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-white/80 shadow flex items-center justify-center text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover/card:opacity-100"
+                                                    title="Remove meal"
+                                                >
+                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                                                </button>
                                             </div>
                                         ) : (
                                             <div className="flex items-center justify-center flex-1 text-zinc-400 hover:text-zinc-600 transition-colors">

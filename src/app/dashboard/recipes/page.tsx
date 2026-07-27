@@ -9,6 +9,7 @@ import {
     deleteRecipe,
     toggleFavorite,
     updateIngredient,
+    updateRecipeTags,
 } from "@/lib/actions";
 
 const CARD_GRADIENTS = [
@@ -115,6 +116,11 @@ export default function RecipesPage() {
     const [activeFolder, setActiveFolder] = useState("All");
     const [libSearchQuery, setLibSearchQuery] = useState("");
     const [selectedRecipe, setSelectedRecipe] = useState<any>(null);
+
+    // Tag/folder editing
+    const [editingTags, setEditingTags] = useState(false);
+    const [tagInput, setTagInput] = useState("");
+    const [selectedFolder, setSelectedFolder] = useState("");
 
     // Popular searches
     const popularSearches = ["Pasta", "Chicken", "Salad", "Soup", "Burger", "Pizza", "Fish", "Beef"];
@@ -224,6 +230,26 @@ export default function RecipesPage() {
             setSelectedRecipe(updatedSelected);
         }
     };
+
+    const openRecipeDetail = (recipe: any) => {
+        setSelectedRecipe(recipe);
+        setTagInput((recipe.tags || []).join(", "));
+        setSelectedFolder(recipe.folder || "");
+        setEditingTags(false);
+    };
+
+    const handleSaveTagsAndFolder = async () => {
+        if (!selectedRecipe) return;
+        const tags = tagInput.split(",").map(t => t.trim()).filter(Boolean);
+        await updateRecipeTags(selectedRecipe.id, tags, selectedFolder);
+        const updatedLibrary = await getUserRecipes();
+        setLibrary(updatedLibrary);
+        const updated = updatedLibrary.find(r => r.id === selectedRecipe.id);
+        setSelectedRecipe(updated);
+        setEditingTags(false);
+    };
+
+
 
     const allTags = Array.from(new Set(library.flatMap(r => r.tags || [])));
     const filtered = library.filter(r => {
@@ -579,7 +605,7 @@ export default function RecipesPage() {
                                 const gradient = getGradient(item.id);
                                 return (
                                     <div key={item.id}
-                                        onClick={() => setSelectedRecipe(item)}
+                                        onClick={() => openRecipeDetail(item)}
                                         className="bg-white rounded-[20px] border border-zinc-200/80 overflow-hidden shadow-sm hover:shadow-md transition-shadow group cursor-pointer">
                                         <div className={`h-[100px] bg-gradient-to-br ${gradient} relative`}>
                                             <span className="absolute top-3 left-3 px-2.5 py-1 bg-white/20 backdrop-blur-sm text-white text-[11px] font-bold rounded-full">{source}</span>
@@ -632,6 +658,47 @@ export default function RecipesPage() {
                                     <span>⏱ {selectedRecipe.cookTime} min</span>
                                     <span>🍽 {selectedRecipe.servings || 2} servings</span>
                                     <span>🔥 {selectedRecipe.calories} kcal</span>
+                                </div>
+                                
+                                {/* Tag/Folder Editing */}
+                                <div className="mt-4">
+                                    {!editingTags ? (
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            {(selectedRecipe.tags || []).map((t: string) => (
+                                                <span key={t} className="px-2 py-1 rounded-md text-[11px] font-bold border border-zinc-200 text-zinc-600 bg-white">{t}</span>
+                                            ))}
+                                            {selectedRecipe.folder && (
+                                                <span className="px-2 py-1 rounded-md text-[11px] font-bold bg-amber-50 text-amber-600 border border-amber-200">📁 {selectedRecipe.folder}</span>
+                                            )}
+                                            <button onClick={() => setEditingTags(true)} className="text-xs font-semibold text-zinc-400 hover:text-zinc-600 ml-1">✎ Edit</button>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center mt-2 p-3 bg-white rounded-xl border border-zinc-200 shadow-sm">
+                                            <input
+                                                type="text"
+                                                value={tagInput}
+                                                onChange={e => setTagInput(e.target.value)}
+                                                placeholder="Tags (comma separated)"
+                                                className="flex-1 text-xs px-2 py-1.5 border border-zinc-200 rounded-lg outline-none focus:border-zinc-400"
+                                            />
+                                            <select
+                                                value={selectedFolder}
+                                                onChange={e => setSelectedFolder(e.target.value)}
+                                                className="text-xs px-2 py-1.5 border border-zinc-200 rounded-lg outline-none cursor-pointer"
+                                            >
+                                                <option value="">No folder</option>
+                                                <option value="Breakfast">Breakfast</option>
+                                                <option value="Lunch">Lunch</option>
+                                                <option value="Dinner">Dinner</option>
+                                                <option value="Snacks">Snacks</option>
+                                                <option value="Desserts">Desserts</option>
+                                            </select>
+                                            <div className="flex gap-1">
+                                                <button onClick={handleSaveTagsAndFolder} className="px-3 py-1.5 rounded-lg text-xs font-bold text-white shadow-sm hover:opacity-90 transition-opacity" style={{ background: "var(--brand-green)" }}>Save</button>
+                                                <button onClick={() => { setEditingTags(false); setTagInput((selectedRecipe.tags || []).join(", ")); setSelectedFolder(selectedRecipe.folder || ""); }} className="px-3 py-1.5 rounded-lg text-xs font-bold border border-zinc-200 text-zinc-500 hover:bg-zinc-50">Cancel</button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                             <button onClick={() => setSelectedRecipe(null)}

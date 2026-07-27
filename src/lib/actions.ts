@@ -428,7 +428,7 @@ export async function generateGroceryList(startDate: Date, endDate: Date) {
                     name: ing.name,
                     amount: (ing.amount || 0),
                     unit: ing.unit,
-                    aisle: "Produce", // Mock aisle for now
+                    aisle: detectAisle(ing.name),
                     isSubstituted: ing.isSubstituted,
                     substituteFor: ing.substituteFor
                 });
@@ -470,6 +470,91 @@ export async function getLatestGroceryList() {
 export async function toggleGroceryItem(id: string, isChecked: boolean) {
     await db.update(groceryItems).set({ isChecked }).where(eq(groceryItems.id, id));
     return { success: true };
+}
+
+export async function deleteMealPlan(id: string) {
+    const user = await getSessionUser();
+    await db.delete(mealPlans).where(and(eq(mealPlans.id, id), eq(mealPlans.userId, user.id)));
+    return { success: true };
+}
+
+// Smart aisle detection by ingredient name
+function detectAisle(name: string): string {
+    const lower = name.toLowerCase();
+    if (lower.match(/milk|cheese|butter|cream|yogurt|sour cream|cheddar|mozzarella|parmesan|brie|feta|ricotta|cottage cheese/)) return "Dairy";
+    if (lower.match(/chicken|beef|pork|lamb|turkey|bacon|sausage|ham|steak|ground|mince|veal|duck|venison/)) return "Meat & Poultry";
+    if (lower.match(/salmon|tuna|cod|tilapia|shrimp|crab|lobster|prawn|fish|clam|oyster|mussel|halibut|trout/)) return "Seafood";
+    if (lower.match(/apple|banana|orange|lemon|lime|grape|strawberr|blueberr|raspberr|avocado|mango|peach|pear|plum|cherry|watermelon/)) return "Fruits";
+    if (lower.match(/lettuce|spinach|kale|onion|garlic|tomato|carrot|celery|broccoli|cauliflower|zucchini|cucumber|pepper|mushroom|potato|sweet potato|asparagus|leek|ginger|shallot|scallion|green bean|pea|corn|squash/)) return "Produce";
+    if (lower.match(/bread|bagel|bun|muffin|roll|tortilla|pita|naan|sourdough|baguette/)) return "Bakery";
+    if (lower.match(/pasta|noodle|rice|quinoa|couscous|barley|oat|cereal|flour|bread crumb/)) return "Grains & Pasta";
+    if (lower.match(/almond|walnut|cashew|peanut|pecan|pistachio|hazelnut|sunflower seed|pumpkin seed|sesame/)) return "Nuts & Seeds";
+    if (lower.match(/soy sauce|olive oil|vinegar|ketchup|mustard|mayo|salsa|hot sauce|worcestershire|sriracha|fish sauce|oyster sauce|hoisin|teriyaki|tahini/)) return "Condiments & Sauces";
+    if (lower.match(/cumin|paprika|oregano|basil|thyme|rosemary|turmeric|cinnamon|pepper|salt|chili|cayenne|curry|bay leaf|clove|nutmeg|coriander|cardamom/)) return "Spices & Herbs";
+    if (lower.match(/sugar|honey|maple syrup|agave|stevia|molasses|brown sugar|powdered sugar|vanilla/)) return "Baking & Sweeteners";
+    if (lower.match(/tofu|tempeh|seitan|edamame|miso|lentil|chickpea|black bean|kidney bean|cannellini|navy bean/)) return "Plant-Based & Legumes";
+    if (lower.match(/beer|wine|rum|vodka|whiskey|gin|juice|soda|kombucha|coconut water|broth|stock/)) return "Beverages";
+    if (lower.match(/frozen|ice cream/)) return "Frozen Foods";
+    return "Other";
+}
+
+export async function addGroceryItem(listId: string, name: string, amount: number, unit: string) {
+    await db.insert(groceryItems).values({
+        listId,
+        name,
+        amount,
+        unit,
+        aisle: detectAisle(name),
+        isChecked: false,
+    });
+    return { success: true };
+}
+
+export async function updateRecipeTags(recipeId: string, tags: string[], folder: string) {
+    const user = await getSessionUser();
+    await db.update(recipes).set({ tags, folder }).where(and(eq(recipes.id, recipeId), eq(recipes.userId, user.id)));
+    return { success: true };
+}
+
+export async function getWeeklyNutrition() {
+    const user = await getSessionUser();
+    const prefs = await db.query.preferences.findFirst({
+        where: eq(preferences.userId, user.id)
+    });
+
+    // Get all meal plans for this user
+    const plans = await db.query.mealPlans.findMany({
+        where: eq(mealPlans.userId, user.id),
+        with: { recipe: true }
+    });
+
+    // Build last-7-days data keyed by mealType day prefix
+    const DAYS_FULL = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    const dayTotals: Record<string, { calories: number; protein: number; carbs: number; fat: number }> = {};
+    for (const day of DAYS_FULL) {
+        dayTotals[day] = { calories: 0, protein: 0, carbs: 0, fat: 0 };
+    }
+
+    for (const plan of plans) {
+        const dayKey = plan.mealType.split("-")[0];
+        if (dayTotals[dayKey] && plan.recipe) {
+            dayTotals[dayKey].calories += plan.recipe.calories || 0;
+            dayTotals[dayKey].protein += plan.recipe.protein || 0;
+            dayTotals[dayKey].carbs += plan.recipe.carbs || 0;
+            dayTotals[dayKey].fat += plan.recipe.fat || 0;
+        }
+    }
+
+    return {
+        days: DAYS_FULL.map(day => ({ day, ...dayTotals[day] })),
+        goals: {
+            calories: prefs?.dailyCalories || 2000,
+            protein: prefs?.dailyProtein || 150,
+            carbs: prefs?.dailyCarbs || 250,
+            fat: prefs?.dailyFat || 70,
+        },
+        mealPlanIds: plans.map(p => ({ id: p.id, mealType: p.mealType })),
+    };
 }
 
 // Recipe Extraction Mock & Dietary Engine (URL-based import — kept as fallback/demo)
