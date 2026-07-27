@@ -50,7 +50,7 @@ export default function SafeEatsClient({ activeFilters }: { activeFilters: strin
             {/* Map + List responsive stack */}
             <div className="flex-1 flex flex-col md:flex-row gap-6 md:overflow-hidden pt-2">
                 {/* Real Leaflet Map */}
-                <div className="flex-[1.2] rounded-[24px] overflow-hidden border border-zinc-200 shadow-sm min-h-[300px] md:min-h-0 relative z-0">
+                <div className="flex-[1.2] rounded-[24px] overflow-hidden border border-zinc-200 shadow-sm h-[350px] md:h-auto min-h-[350px] md:min-h-0 relative z-0">
                     <MapComponent places={mockPlaces} />
                 </div>
 

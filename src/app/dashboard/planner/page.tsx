@@ -96,33 +96,37 @@ export default function PlannerPage() {
             </header>
 
             {/* Macro Tracker Card */}
-            <div className="bg-white border border-zinc-200/80 rounded-[20px] p-6 shadow-sm flex gap-8 items-center">
-                {/* Calorie Ring */}
-                <div className="relative flex-shrink-0 w-[110px] h-[110px]">
-                    <svg className="w-full h-full -rotate-90" viewBox="0 0 110 110">
-                        <circle cx="55" cy="55" r={r} fill="none" stroke="#e4e4e7" strokeWidth="10" />
-                        <circle cx="55" cy="55" r={r} fill="none" stroke="#1a6b3a" strokeWidth="10"
-                            strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-[18px] font-black text-zinc-900 leading-none">{totalCals.toLocaleString()}</span>
-                        <span className="text-[10px] text-zinc-400">/{goalCals}</span>
+            <div className="bg-white border border-zinc-200/80 rounded-[20px] p-6 shadow-sm flex flex-col lg:flex-row gap-8 items-center lg:items-center">
+                
+                <div className="flex items-center gap-6 w-full lg:w-auto lg:flex-1">
+                    {/* Calorie Ring */}
+                    <div className="relative flex-shrink-0 w-[110px] h-[110px]">
+                        <svg className="w-full h-full -rotate-90" viewBox="0 0 110 110">
+                            <circle cx="55" cy="55" r={r} fill="none" stroke="#e4e4e7" strokeWidth="10" />
+                            <circle cx="55" cy="55" r={r} fill="none" stroke="#1a6b3a" strokeWidth="10"
+                                strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="text-[18px] font-black text-zinc-900 leading-none">{totalCals.toLocaleString()}</span>
+                            <span className="text-[10px] text-zinc-400">/{goalCals}</span>
+                        </div>
+                    </div>
+                    {/* Calorie Details */}
+                    <div className="flex-1">
+                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">🔥 Weekly Calorie Tracker</p>
+                        <p className="text-[22px] font-black text-zinc-900">{totalCals.toLocaleString()} <span className="text-[14px] font-medium text-zinc-500 hidden sm:inline">kcal / day avg</span></p>
+                        <p className="text-[13px] text-zinc-400 mt-0.5">{allMeals.length} meals planned</p>
                     </div>
                 </div>
-                {/* Calorie Details */}
-                <div className="flex-1">
-                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">🔥 Weekly Calorie Tracker</p>
-                    <p className="text-[22px] font-black text-zinc-900">{totalCals.toLocaleString()} <span className="text-[14px] font-medium text-zinc-500">kcal / day avg</span></p>
-                    <p className="text-[13px] text-zinc-400 mt-0.5">{allMeals.length} meals planned this week</p>
-                </div>
+
                 {/* Macro bars */}
-                <div className="flex gap-8 flex-shrink-0">
+                <div className="flex gap-4 sm:gap-8 w-full lg:w-auto justify-between lg:justify-end border-t lg:border-t-0 pt-6 lg:pt-0 border-zinc-100">
                     {[
                         { label: "Protein", val: totalProtein, color: "#ef4444" },
                         { label: "Carbs", val: totalCarbs, color: "#eab308" },
                         { label: "Fat", val: totalFat, color: "#3b82f6" },
                     ].map(m => (
-                        <div key={m.label} className="text-center min-w-[80px]">
+                        <div key={m.label} className="text-center flex-1 lg:flex-none lg:min-w-[80px]">
                             <p className="text-[22px] font-black text-zinc-900">{m.val}<span className="text-[13px] font-medium text-zinc-400">g</span></p>
                             <p className="text-[11px] text-zinc-500 mt-1">{m.label}</p>
                             <div className="mt-2 h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden">
