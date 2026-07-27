@@ -426,6 +426,11 @@ export default function RecipesPage() {
                                         {recipe.source === "TheMealDB" && (
                                             <span className="text-xs font-bold uppercase tracking-wider text-green-700 bg-green-100 px-2 py-0.5 rounded-md">✓ Real Recipe</span>
                                         )}
+                                        {recipe.source && recipe.source !== "TheMealDB" && (
+                                            <span className="text-xs font-bold uppercase tracking-wider text-purple-700 bg-purple-100 px-2 py-0.5 rounded-md">
+                                                From {recipe.source}
+                                            </span>
+                                        )}
                                         <h2 className="text-lg md:text-xl font-bold text-zinc-900">{recipe.title}</h2>
                                     </div>
                                     <div className="flex flex-wrap gap-3 text-zinc-500 text-sm">

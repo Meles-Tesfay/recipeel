@@ -567,111 +567,226 @@ export async function extractRecipeFromUrl(url: string) {
     const dietary = (prefs?.dietary as string[] | null) ?? [];
     const allergies = (prefs?.allergies as string[] | null) ?? [];
 
-    // Try to extract a keyword from the URL for TheMealDB search
     const urlLower = url.toLowerCase();
+    const isSocialMedia = urlLower.includes("tiktok") || urlLower.includes("instagram") || urlLower.includes("youtube") || urlLower.includes("youtu.be");
     let searchQuery = "pasta"; // default
 
-    if (urlLower.includes("chicken")) searchQuery = "chicken";
-    else if (urlLower.includes("pasta") || urlLower.includes("noodle")) searchQuery = "pasta";
-    else if (urlLower.includes("salad")) searchQuery = "salad";
-    else if (urlLower.includes("soup")) searchQuery = "soup";
-    else if (urlLower.includes("burger")) searchQuery = "burger";
-    else if (urlLower.includes("pizza")) searchQuery = "pizza";
-    else if (urlLower.includes("sushi")) searchQuery = "sushi";
-    else if (urlLower.includes("taco")) searchQuery = "taco";
-    else if (urlLower.includes("smoothie")) searchQuery = "smoothie";
-    else if (urlLower.includes("steak")) searchQuery = "beef";
-    else if (urlLower.includes("fish") || urlLower.includes("salmon")) searchQuery = "fish";
+    // If it's not a known social media site, try to find a recipe via API
+    if (!isSocialMedia) {
+        if (urlLower.includes("chicken")) searchQuery = "chicken";
+        else if (urlLower.includes("pasta") || urlLower.includes("noodle")) searchQuery = "pasta";
+        else if (urlLower.includes("salad")) searchQuery = "salad";
+        else if (urlLower.includes("soup")) searchQuery = "soup";
+        else if (urlLower.includes("burger")) searchQuery = "burger";
+        else if (urlLower.includes("pizza")) searchQuery = "pizza";
+        else if (urlLower.includes("sushi")) searchQuery = "sushi";
+        else if (urlLower.includes("taco")) searchQuery = "taco";
+        else if (urlLower.includes("smoothie")) searchQuery = "smoothie";
+        else if (urlLower.includes("steak")) searchQuery = "beef";
+        else if (urlLower.includes("fish") || urlLower.includes("salmon")) searchQuery = "fish";
 
-    // Try real API first
-    try {
-        const res = await fetch(`${MEALDB_BASE}/search.php?s=${encodeURIComponent(searchQuery)}`, {
-            next: { revalidate: 3600 }
-        });
-        const data = await res.json();
-        if (data.meals && data.meals.length > 0) {
-            // Pick a random one from results for variety
-            const randomMeal = data.meals[Math.floor(Math.random() * Math.min(data.meals.length, 5))];
-            const parsed = parseMealDbMeal(randomMeal);
-            parsed.originalUrl = url; // keep original URL reference
-            return applyDietaryEngine(parsed, dietary, allergies);
+        try {
+            const res = await fetch(`${MEALDB_BASE}/search.php?s=${encodeURIComponent(searchQuery)}`, {
+                next: { revalidate: 3600 }
+            });
+            const data = await res.json();
+            if (data.meals && data.meals.length > 0) {
+                const randomMeal = data.meals[Math.floor(Math.random() * Math.min(data.meals.length, 5))];
+                const parsed = parseMealDbMeal(randomMeal);
+                parsed.originalUrl = url;
+                parsed.source = "TheMealDB";
+                return applyDietaryEngine(parsed, dietary, allergies);
+            }
+        } catch {
+            // Fall through to mock
         }
-    } catch {
-        // Fall through to mock
     }
 
-    // Fallback mock data (if API is unreachable)
+    // Fallback mock data
+    const hash = [...url].reduce((acc, char) => acc + char.charCodeAt(0), 0);
     let baseRecipe: any;
     
-    if (url.includes("tiktok")) {
-        baseRecipe = {
-            title: "Viral Chili Oil Noodles",
-            cookTime: 15,
-            servings: 2,
-            calories: 480,
-            protein: 12,
-            carbs: 65,
-            fat: 22,
-            ingredients: [
-                { name: "Wheat Noodles", amount: 200, unit: "g", tags: ["Gluten"] },
-                { name: "Soy Sauce", amount: 2, unit: "tbsp", tags: ["Gluten", "Soy"] },
-                { name: "Chili Flakes", amount: 1, unit: "tbsp" },
-                { name: "Garlic", amount: 3, unit: "cloves" },
-                { name: "Peanut Oil", amount: 3, unit: "tbsp", tags: ["Peanuts"] },
-            ],
-            instructions: [
-                "Boil noodles according to package instructions.",
-                "Mince garlic and place in a heat-proof bowl with chili flakes and soy sauce.",
-                "Heat peanut oil until smoking, then pour over the aromatics.",
-                "Toss cooked noodles in the chili oil sauce."
-            ]
-        };
-    } else if (url.includes("instagram")) {
-         baseRecipe = {
-            title: "Healthy Protein Smoothie",
-            cookTime: 5,
-            servings: 1,
-            calories: 320,
-            protein: 30,
-            carbs: 40,
-            fat: 8,
-            ingredients: [
-                { name: "Banana", amount: 1, unit: "whole" },
-                { name: "Whey Protein", amount: 1, unit: "scoop", tags: ["Dairy"] },
-                { name: "Almond Milk", amount: 1, unit: "cup", tags: ["Tree Nuts"] },
-                { name: "Peanut Butter", amount: 1, unit: "tbsp", tags: ["Peanuts"] },
-            ],
-            instructions: [
-                "Add all ingredients to a blender.",
-                "Blend until smooth.",
-                "Serve immediately."
-            ]
-        };
+    if (urlLower.includes("tiktok")) {
+        const mocks = [
+            {
+                title: "Viral Chili Oil Noodles",
+                source: "TikTok",
+                cookTime: 15,
+                servings: 2,
+                calories: 480,
+                protein: 12,
+                carbs: 65,
+                fat: 22,
+                ingredients: [
+                    { name: "Wheat Noodles", amount: 200, unit: "g", tags: ["Gluten"] },
+                    { name: "Soy Sauce", amount: 2, unit: "tbsp", tags: ["Gluten", "Soy"] },
+                    { name: "Chili Flakes", amount: 1, unit: "tbsp" },
+                    { name: "Garlic", amount: 3, unit: "cloves" },
+                    { name: "Peanut Oil", amount: 3, unit: "tbsp", tags: ["Peanuts"] },
+                ],
+                instructions: [
+                    "Boil noodles according to package instructions.",
+                    "Mince garlic and place in a heat-proof bowl with chili flakes and soy sauce.",
+                    "Heat peanut oil until smoking, then pour over the aromatics.",
+                    "Toss cooked noodles in the chili oil sauce."
+                ]
+            },
+            {
+                title: "Baked Feta Pasta",
+                source: "TikTok",
+                cookTime: 35,
+                servings: 4,
+                calories: 520,
+                protein: 16,
+                carbs: 55,
+                fat: 28,
+                ingredients: [
+                    { name: "Cherry Tomatoes", amount: 2, unit: "cups" },
+                    { name: "Feta Cheese", amount: 1, unit: "block", tags: ["Dairy"] },
+                    { name: "Olive Oil", amount: 3, unit: "tbsp" },
+                    { name: "Pasta", amount: 250, unit: "g", tags: ["Gluten"] },
+                    { name: "Garlic", amount: 2, unit: "cloves" },
+                    { name: "Fresh Basil", amount: 0.25, unit: "cup" },
+                ],
+                instructions: [
+                    "Preheat oven to 400°F (200°C).",
+                    "Place cherry tomatoes and whole feta block in a baking dish. Drizzle generously with olive oil.",
+                    "Bake for 30 minutes until tomatoes burst.",
+                    "Meanwhile, cook pasta according to package instructions.",
+                    "Mash the baked feta and tomatoes together into a creamy sauce.",
+                    "Stir in cooked pasta, minced garlic, and fresh basil."
+                ]
+            }
+        ];
+        baseRecipe = mocks[hash % mocks.length];
+    } else if (urlLower.includes("instagram")) {
+         const mocks = [
+            {
+                title: "Healthy Protein Smoothie",
+                source: "Instagram",
+                cookTime: 5,
+                servings: 1,
+                calories: 320,
+                protein: 30,
+                carbs: 40,
+                fat: 8,
+                ingredients: [
+                    { name: "Banana", amount: 1, unit: "whole" },
+                    { name: "Whey Protein", amount: 1, unit: "scoop", tags: ["Dairy"] },
+                    { name: "Almond Milk", amount: 1, unit: "cup", tags: ["Tree Nuts"] },
+                    { name: "Peanut Butter", amount: 1, unit: "tbsp", tags: ["Peanuts"] },
+                ],
+                instructions: [
+                    "Add all ingredients to a blender.",
+                    "Blend until smooth.",
+                    "Serve immediately."
+                ]
+            },
+            {
+                title: "Avocado Egg Toast",
+                source: "Instagram",
+                cookTime: 10,
+                servings: 1,
+                calories: 350,
+                protein: 14,
+                carbs: 25,
+                fat: 22,
+                ingredients: [
+                    { name: "Sourdough Bread", amount: 1, unit: "slice", tags: ["Gluten"] },
+                    { name: "Avocado", amount: 0.5, unit: "whole" },
+                    { name: "Egg", amount: 1, unit: "whole", tags: ["Eggs"] },
+                    { name: "Everything Bagel Seasoning", amount: 1, unit: "tsp" },
+                ],
+                instructions: [
+                    "Toast the sourdough bread to your liking.",
+                    "Mash the avocado and spread it evenly on the toast.",
+                    "Cook the egg (fried, poached, or scrambled) and place it on top.",
+                    "Sprinkle with Everything Bagel seasoning."
+                ]
+            }
+        ];
+        baseRecipe = mocks[hash % mocks.length];
+    } else if (urlLower.includes("youtube") || urlLower.includes("youtu.be")) {
+        const mocks = [
+            {
+                title: "Crispy Smashed Potatoes",
+                source: "YouTube",
+                cookTime: 45,
+                servings: 3,
+                calories: 280,
+                protein: 5,
+                carbs: 45,
+                fat: 10,
+                ingredients: [
+                    { name: "Baby Potatoes", amount: 500, unit: "g" },
+                    { name: "Olive Oil", amount: 2, unit: "tbsp" },
+                    { name: "Garlic Powder", amount: 1, unit: "tsp" },
+                    { name: "Paprika", amount: 0.5, unit: "tsp" },
+                    { name: "Salt", amount: 1, unit: "tsp" },
+                ],
+                instructions: [
+                    "Boil potatoes in salted water until fork-tender, about 15-20 minutes.",
+                    "Drain and let dry. Preheat oven to 425°F (220°C).",
+                    "Place potatoes on a baking sheet and smash flat using the bottom of a glass.",
+                    "Drizzle with olive oil and sprinkle with spices.",
+                    "Bake for 20-25 minutes until crispy and golden."
+                ]
+            },
+            {
+                title: "One Pan Lemon Herb Chicken",
+                source: "YouTube",
+                cookTime: 30,
+                servings: 2,
+                calories: 410,
+                protein: 45,
+                carbs: 8,
+                fat: 20,
+                ingredients: [
+                    { name: "Chicken Thighs", amount: 2, unit: "pieces" },
+                    { name: "Lemon", amount: 1, unit: "whole" },
+                    { name: "Rosemary", amount: 2, unit: "sprigs" },
+                    { name: "Olive Oil", amount: 1, unit: "tbsp" },
+                    { name: "Asparagus", amount: 1, unit: "bunch" },
+                ],
+                instructions: [
+                    "Preheat oven to 400°F (200°C).",
+                    "Season chicken thighs with salt, pepper, and olive oil.",
+                    "Sear in an oven-safe skillet skin-side down until crispy.",
+                    "Flip chicken, add asparagus, lemon slices, and rosemary to the pan.",
+                    "Roast in the oven for 15 minutes until chicken is cooked through."
+                ]
+            }
+        ];
+        baseRecipe = mocks[hash % mocks.length];
     } else {
-        baseRecipe = {
-            title: "Creamy Tuscan Chicken",
-            cookTime: 30,
-            servings: 4,
-            calories: 550,
-            protein: 42,
-            carbs: 12,
-            fat: 35,
-            ingredients: [
-                { name: "Chicken Breast", amount: 2, unit: "lbs" },
-                { name: "Heavy Cream", amount: 1, unit: "cup", tags: ["Dairy"] },
-                { name: "Parmesan", amount: 0.5, unit: "cup", tags: ["Dairy"] },
-                { name: "Spinach", amount: 2, unit: "cups" },
-                { name: "Sun-dried Tomatoes", amount: 0.5, unit: "cup" },
-                { name: "Garlic Cloves", amount: 4, unit: "cloves" },
-            ],
-            instructions: [
-                "Season chicken breast with salt, pepper, and Italian seasoning.",
-                "Sear chicken in olive oil over medium-high heat until golden, about 4 minutes per side. Remove and set aside.",
-                "In the same pan, sauté garlic until fragrant. Add heavy cream and parmesan to form the sauce.",
-                "Stir in spinach and sun-dried tomatoes until spinach wilts.",
-                "Return chicken to the pan. Simmer on low for 5 minutes until cooked through.",
-            ]
-        };
+        const mocks = [
+            {
+                title: "Creamy Tuscan Chicken",
+                source: "Website",
+                cookTime: 30,
+                servings: 4,
+                calories: 550,
+                protein: 42,
+                carbs: 12,
+                fat: 35,
+                ingredients: [
+                    { name: "Chicken Breast", amount: 2, unit: "lbs" },
+                    { name: "Heavy Cream", amount: 1, unit: "cup", tags: ["Dairy"] },
+                    { name: "Parmesan", amount: 0.5, unit: "cup", tags: ["Dairy"] },
+                    { name: "Spinach", amount: 2, unit: "cups" },
+                    { name: "Sun-dried Tomatoes", amount: 0.5, unit: "cup" },
+                    { name: "Garlic Cloves", amount: 4, unit: "cloves" },
+                ],
+                instructions: [
+                    "Season chicken breast with salt, pepper, and Italian seasoning.",
+                    "Sear chicken in olive oil over medium-high heat until golden, about 4 minutes per side. Remove and set aside.",
+                    "In the same pan, sauté garlic until fragrant. Add heavy cream and parmesan to form the sauce.",
+                    "Stir in spinach and sun-dried tomatoes until spinach wilts.",
+                    "Return chicken to the pan. Simmer on low for 5 minutes until cooked through.",
+                ]
+            }
+        ];
+        baseRecipe = mocks[hash % mocks.length];
     }
 
     // Apply Dietary Engine
@@ -717,4 +832,5 @@ export async function extractRecipeFromUrl(url: string) {
         originalUrl: url
     };
 }
+
 
