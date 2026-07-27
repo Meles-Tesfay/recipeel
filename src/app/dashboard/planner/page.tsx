@@ -83,14 +83,15 @@ export default function PlannerPage() {
                     <h1 className="text-[28px] font-bold text-zinc-900 tracking-tight">Weekly Meal Planner</h1>
                     <p className="text-[14px] text-zinc-500 mt-1">Assign recipes to meal slots — macros and the grocery list update instantly.</p>
                 </div>
-                <button onClick={handleGenerate} disabled={generating}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border border-zinc-200 bg-white shadow-sm hover:shadow-md transition-all text-zinc-700 disabled:opacity-50">
+                <button onClick={handleGenerate} disabled={generating || Object.keys(plannerData).length === 0}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+                    style={{ background: "var(--brand-green)" }}>
                     {generating ? (
-                        <span className="inline-block w-4 h-4 border-2 border-zinc-300 border-t-zinc-700 rounded-full animate-spin" />
+                        <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     ) : (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                     )}
-                    {generating ? "Generating..." : "Clear week"}
+                    {generating ? "Compiling List..." : "Generate Grocery List"}
                 </button>
             </header>
 

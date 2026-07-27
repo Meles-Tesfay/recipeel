@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { getLatestGroceryList, toggleGroceryItem } from "@/lib/actions";
 
 interface GroceryItem {
@@ -87,8 +88,24 @@ export default function GroceriesPage() {
             </header>
 
             {totalCount === 0 ? (
-                <div className="p-8 text-center rounded-2xl border border-dashed bg-white" style={{ borderColor: "var(--border)" }}>
-                    <p className="text-sm font-medium" style={{ color: "var(--muted)" }}>Your list is empty. Go to the Meal Planner to generate one!</p>
+                <div className="py-16 text-center rounded-[24px] border border-dashed bg-white flex flex-col items-center justify-center space-y-5" style={{ borderColor: "var(--border)" }}>
+                    <div className="w-20 h-20 rounded-full bg-zinc-50 flex items-center justify-center mb-2">
+                        <span className="text-4xl">🛒</span>
+                    </div>
+                    <div className="max-w-md">
+                        <h2 className="text-xl font-bold text-zinc-900 tracking-tight mb-2">Your grocery list is empty</h2>
+                        <p className="text-[15px] text-zinc-500">
+                            We automatically compile your grocery list based on your weekly meal plan. Head over to the Planner to get started!
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-3 mt-4">
+                        <Link href="/dashboard/recipes" className="px-5 py-2.5 rounded-xl text-sm font-semibold border border-zinc-200 text-zinc-600 hover:bg-zinc-50 transition-colors">
+                            Browse Recipes
+                        </Link>
+                        <Link href="/dashboard/planner" className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-opacity" style={{ background: "var(--brand-green)" }}>
+                            Go to Meal Planner
+                        </Link>
+                    </div>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
