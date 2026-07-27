@@ -47,15 +47,15 @@ export default function SafeEatsClient({ activeFilters }: { activeFilters: strin
                 </div>
             </div>
 
-            {/* Map + List side by side */}
-            <div className="flex-1 flex gap-6 overflow-hidden pt-2">
+            {/* Map + List responsive stack */}
+            <div className="flex-1 flex flex-col md:flex-row gap-6 md:overflow-hidden pt-2">
                 {/* Real Leaflet Map */}
-                <div className="flex-[1.2] rounded-[24px] overflow-hidden border border-zinc-200 shadow-sm">
+                <div className="flex-[1.2] rounded-[24px] overflow-hidden border border-zinc-200 shadow-sm min-h-[300px] md:min-h-0 relative z-0">
                     <MapComponent places={mockPlaces} />
                 </div>
 
                 {/* Location Cards */}
-                <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+                <div className="flex-1 overflow-y-auto space-y-4 pr-1 pb-20 md:pb-0">
                     {mockPlaces.map((place, i) => {
                         const iconBg = place.isGrocery ? "bg-emerald-500" : "bg-red-500";
                         const isSelected = selectedIdx === i;
