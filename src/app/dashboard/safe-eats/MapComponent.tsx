@@ -41,7 +41,7 @@ export default function MapComponent({ places }: { places: Place[] }) {
         <MapContainer
             center={center}
             zoom={14}
-            style={{ height: "100%", width: "100%", borderRadius: "24px" }}
+            style={{ height: "400px", width: "100%", borderRadius: "24px" }}
             scrollWheelZoom={false}
         >
             <TileLayer

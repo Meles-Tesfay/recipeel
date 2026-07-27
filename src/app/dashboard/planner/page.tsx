@@ -113,7 +113,10 @@ export default function PlannerPage() {
                     </div>
                     {/* Calorie Details */}
                     <div className="flex-1">
-                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">🔥 Weekly Calorie Tracker</p>
+                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" /></svg>
+                            Weekly Calorie Tracker
+                        </p>
                         <p className="text-[22px] font-black text-zinc-900">{totalCals.toLocaleString()} <span className="text-[14px] font-medium text-zinc-500 hidden sm:inline">kcal / day avg</span></p>
                         <p className="text-[13px] text-zinc-400 mt-0.5">{allMeals.length} meals planned</p>
                     </div>
@@ -177,7 +180,7 @@ export default function PlannerPage() {
                                                 <div className="p-2.5">
                                                     <p className="text-[12px] font-semibold text-zinc-800 leading-tight line-clamp-2">{meal.title}</p>
                                                     <p className="text-[10px] text-zinc-400 mt-1">
-                                                        🔥 {meal.calories} cal · {meal.protein}p
+                                                        <svg className="w-3 h-3 inline mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" /></svg> {meal.calories} cal · {meal.protein}p
                                                     </p>
                                                 </div>
                                             </div>

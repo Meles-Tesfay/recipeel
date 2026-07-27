@@ -66,13 +66,16 @@ export default function SafeEatsClient({ activeFilters }: { activeFilters: strin
                                 className={`bg-white rounded-[20px] border p-5 shadow-sm cursor-pointer transition-all ${isSelected ? "border-[#1b4332] ring-2 ring-[#1b4332]/20" : "border-zinc-200 hover:shadow-md"}`}
                             >
                                 <div className="flex gap-4 items-start mb-4">
-                                    <div className={`w-12 h-12 rounded-[14px] ${iconBg} text-white flex items-center justify-center flex-shrink-0 shadow-sm text-xl`}>
-                                        {place.isGrocery ? "🏪" : "🍽️"}
+                                    <div className={`w-12 h-12 rounded-[14px] ${iconBg} text-white flex items-center justify-center flex-shrink-0 shadow-sm`}>
+                                        {place.isGrocery ? (
+                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                                        ) : (
+                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M3 13h18M3 13a2 2 0 00-2 2v3a2 2 0 002 2h18a2 2 0 002-2v-3a2 2 0 00-2-2M3 13V7a2 2 0 012-2h14a2 2 0 012 2v6" /></svg>
+                                        )}
                                     </div>
                                     <div>
                                         <h3 className="font-bold text-[16px] text-zinc-900">
-                                            {place.name}{" "}
-                                            <span className="text-zinc-400 text-xs">☑️</span>
+                                            {place.name}
                                         </h3>
                                         <p className="text-[12px] text-zinc-500 mt-0.5">{place.type} Store · {place.dist} away</p>
                                         <div className="flex items-center gap-1 mt-1 text-[13px]">
@@ -94,9 +97,9 @@ export default function SafeEatsClient({ activeFilters }: { activeFilters: strin
                                     <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">Specialty items in stock</p>
                                     <div className="flex flex-wrap gap-2">
                                         {SPECIALTY_ITEMS.map(item => (
-                                            <span key={item} className="px-2 py-1 rounded-md text-[11px] font-medium bg-[#f0f9f4] border border-[#d3eede] text-[#2c7a51] flex items-center gap-1">
-                                                <span className="text-[10px]">📍</span> {item}
-                                            </span>
+                                            <p className="text-[11px] font-medium flex items-center gap-1 text-[#2c7a51]">
+                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg> {item}
+                                            </p>
                                         ))}
                                     </div>
                                 </div>

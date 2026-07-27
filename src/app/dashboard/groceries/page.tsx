@@ -90,7 +90,7 @@ export default function GroceriesPage() {
             {totalCount === 0 ? (
                 <div className="py-16 text-center rounded-[24px] border border-dashed bg-white flex flex-col items-center justify-center space-y-5" style={{ borderColor: "var(--border)" }}>
                     <div className="w-20 h-20 rounded-full bg-zinc-50 flex items-center justify-center mb-2">
-                        <span className="text-4xl">🛒</span>
+                        <svg className="w-10 h-10 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                     </div>
                     <div className="max-w-md">
                         <h2 className="text-xl font-bold text-zinc-900 tracking-tight mb-2">Your grocery list is empty</h2>
@@ -110,16 +110,26 @@ export default function GroceriesPage() {
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                     {Object.entries(list).map(([aisle, items]) => {
-                        let icon = "🛒";
-                        if (aisle.includes("Produce") || aisle.includes("Fruit") || aisle.includes("Vegetable")) icon = "🍏";
-                        else if (aisle.includes("Dairy")) icon = "🥛";
-                        else if (aisle.includes("Meat") || aisle.includes("Poultry")) icon = "🥩";
-                        else if (aisle.includes("Bakery") || aisle.includes("Bread")) icon = "🍞";
+                        let icon = (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                        );
+                        if (aisle.includes("Produce") || aisle.includes("Fruit") || aisle.includes("Vegetable")) icon = (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                        );
+                        else if (aisle.includes("Dairy")) icon = (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M9 3h6l1 5H8L9 3zM8 8v13h8V8" /></svg>
+                        );
+                        else if (aisle.includes("Meat") || aisle.includes("Poultry")) icon = (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                        );
+                        else if (aisle.includes("Bakery") || aisle.includes("Bread")) icon = (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M21 15a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2h1l2-3h8l2 3h1a2 2 0 012 2v6z" /></svg>
+                        );
 
                         return (
                         <div key={aisle} className="bg-white rounded-[20px] shadow-sm border border-zinc-200/80 overflow-hidden">
                             <div className="px-5 py-4 border-b border-zinc-100 flex items-center gap-4" style={{ background: "#f8faf9" }}>
-                                <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl bg-[#e6f0eb] border border-[#d3e4dc]">
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#e6f0eb] border border-[#d3e4dc]" style={{ color: "var(--brand-green)" }}>
                                     {icon}
                                 </div>
                                 <div>
@@ -151,7 +161,7 @@ export default function GroceriesPage() {
                                                     </span>
                                                     {item.isSubstituted && (
                                                         <p className="text-[11px] font-medium flex items-center gap-1 text-[var(--brand-green-dark)]">
-                                                            <span>🔄</span> Substituted for {item.substituteFor}
+                                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg> Substituted for {item.substituteFor}
                                                         </p>
                                                     )}
                                                 </div>
